@@ -1,0 +1,10 @@
+Django>=5.0,<5.1
+djangorestframework>=3.15
+djangorestframework-simplejwt>=5.3
+drf-yasg>=1.21
+channels>=4.0
+channels-redis>=4.2        # prod only
+django-cors-headers>=4.4
+mssql-django>=1.5
+pyodbc>=5.1
+requests>=2.31              # real SiPass client, later
