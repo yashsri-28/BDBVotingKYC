@@ -4,14 +4,14 @@ from drf_yasg import openapi
 
 from .models import AuditLog
 from .serializers import AuditLogSerializer
-from apps.accounts.permissions import IsSupervisorOrAdmin
+from apps.accounts.permissions import IsSuperAdmin
 
 
 class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """GET /api/audit/logs/?customer_code=C00030 — read-only, supervisor/admin only."""
     queryset = AuditLog.objects.select_related("actor").all()
     serializer_class = AuditLogSerializer
-    permission_classes = [IsSupervisorOrAdmin]
+    permission_classes = [IsSuperAdmin]
 
     @swagger_auto_schema(tags=["Audit"], manual_parameters=[openapi.Parameter("customer_code", openapi.IN_QUERY, type=openapi.TYPE_STRING)])
     def list(self, request, *args, **kwargs):

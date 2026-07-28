@@ -217,14 +217,14 @@ export default function Dashboard() {
               <button
                 onClick={handleVerify}
                 disabled={submitting}
-                className="rounded-lg bg-verified-600 text-white font-medium px-6 py-2.5 hover:opacity-90 disabled:opacity-60 transition"
+                className="tap-target rounded-lg bg-verified-600 text-white font-medium px-6 py-2.5 hover:opacity-90 disabled:opacity-60 transition"
               >
                 {submitting ? "Submitting…" : "Verified — Send for Vote"}
               </button>
               <button
                 onClick={() => setShowRejectForm(true)}
                 disabled={submitting}
-                className="rounded-lg border border-blocked-600 text-blocked-600 font-medium px-6 py-2.5 hover:bg-blocked-100 transition"
+                className="tap-target rounded-lg border border-blocked-600 text-blocked-600 font-medium px-6 py-2.5 hover:bg-blocked-100 transition"
               >
                 Mark Not Eligible
               </button>

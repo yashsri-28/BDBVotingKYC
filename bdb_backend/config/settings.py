@@ -17,7 +17,7 @@ SECRET_KEY = "django-insecure-CHANGE-ME-in-production"
 DEBUG = config.getboolean("settings", "DEBUG", fallback=True)
 ALLOWED_HOSTS = ["*"]  # tighten before production
 
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------cl---------------
 # Applications
 # ---------------------------------------------------------------------------
 INSTALLED_APPS = [
@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     "apps.sipass_integration",
     "apps.verification",
     "apps.audit",
+    "apps.ballots",
+    "apps.counting",
 ]
 
 MIDDLEWARE = [
@@ -140,7 +142,10 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+KYC_MEDIA_ROOT = config.get(
+    "settings", "KYC_MEDIA_ROOT",
+    fallback=str(BASE_DIR / "media"),
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -199,20 +204,19 @@ EMAIL_HOST_USER = config.get("KYCMail", "EMAIL_HOST_USER", fallback="")
 EMAIL_HOST_PASSWORD = config.get("KYCMail", "EMAIL_HOST_PASSWORD", fallback="")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-
-
-
-# Email test mode: while True, ALL verification/rejection emails go to
-# EMAIL_TEST_RECIPIENT regardless of the actual representative's email.
-# Flip to False once ready to send to real Authorized Representative emails.
-EMAIL_TEST_MODE = config.getboolean("settings", "EMAIL_TEST_MODE", fallback=True)
-EMAIL_TEST_RECIPIENT = config.get("settings", "EMAIL_TEST_RECIPIENT", fallback="")
-
 # ---------------------------------------------------------------------------
 # Feature flags — per project decisions
 # ---------------------------------------------------------------------------
 USE_MOCK_KYC_DATA = config.getboolean("settings", "USE_MOCK_KYC_DATA", fallback=True)
 USE_MOCK_SIPASS = config.getboolean("settings", "USE_MOCK_SIPASS", fallback=True)
+
+# --- Verification email notifications ---
+# While EMAIL_TEST_MODE=True, every verification/rejection email is sent
+# to EMAIL_TEST_RECIPIENT instead of the real Authorized Representative's
+# address, so testing never emails real members. Flip to False (and set a
+# real recipient strategy) once ready to go live.
+EMAIL_TEST_MODE = config.getboolean("settings", "EMAIL_TEST_MODE", fallback=True)
+EMAIL_TEST_RECIPIENT = config.get("settings", "EMAIL_TEST_RECIPIENT", fallback="")
 
 RECORD_LOCK_TIMEOUT_SECONDS = config.getint("settings", "RECORD_LOCK_TIMEOUT_SECONDS", fallback=120)
 CARD_TAP_DEBOUNCE_SECONDS = config.getint("settings", "CARD_TAP_DEBOUNCE_SECONDS", fallback=5)

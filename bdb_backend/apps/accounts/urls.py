@@ -7,11 +7,15 @@ class TokenRefreshView(_TokenRefreshView):
     @_sw(tags=["Auth"])
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
-from .views import CounterStaffLoginView, MeView, LogoutView
+from .views import CounterStaffLoginView, MeView, LogoutView, UserManagementViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register("admin/logins", UserManagementViewSet, basename="user-management")
 
 urlpatterns = [
     path("auth/login/", CounterStaffLoginView.as_view(), name="auth-login"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="auth-refresh"),
     path("auth/me/", MeView.as_view(), name="auth-me"),
     path("auth/logout/", LogoutView.as_view(), name="auth-logout"),
-]
+] + router.urls

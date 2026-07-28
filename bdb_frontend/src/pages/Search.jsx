@@ -4,6 +4,7 @@ import { getErrorMessage } from "../api/client";
 import Alert from "../components/Alert";
 import EntityCard from "../components/EntityCard";
 
+
 export default function Search() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState(null);

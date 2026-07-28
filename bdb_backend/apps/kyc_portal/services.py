@@ -16,8 +16,26 @@ def find_users_by_card(access_card_number):
     Section 3: resolve card -> ALL matching users rows (may be 1 or many —
     see multi-entity note above). Returns a list of KycUser, newest-first
     ordering not guaranteed (table has no reliable order column for this).
+
+    Falls back to apps.ballots.models.AuthRepChange when the card doesn't
+    match anything directly: a Super Admin may have assigned a NEW access
+    card number that only exists in that override table, since the live
+    KYC Portal DB itself can't be written to from here.
     """
-    return list(KycUser.objects.filter(access_code=access_card_number))
+    direct_matches = list(KycUser.objects.filter(access_code=access_card_number))
+    if direct_matches:
+        return direct_matches
+
+    from apps.ballots.models import AuthRepChange
+
+    override = (
+        AuthRepChange.objects.filter(new_access_card_number=access_card_number)
+        .order_by("-changed_at")
+        .first()
+    )
+    if not override:
+        return []
+    return list(KycUser.objects.filter(sap_code=override.customer_code))
 
 
 def get_member_for_user(kyc_user):
@@ -33,8 +51,26 @@ def build_entity_view(kyc_user, member):
     flat structure the rest of the app (validators, serializers) expects.
     Not a Django model — just a plain dict, since the "Entity" concept here
     is assembled from two different real tables.
+
+    Checks apps.ballots.models.AuthRepChange first: if a Super Admin has
+    changed the Authorized Representative for this customer code, that
+    override wins over the live (read-only) KYC Portal data. Imported
+    lazily to avoid a module-load-order dependency between the two apps.
     """
+    from apps.ballots.models import AuthRepChange
+
     kyc_status = "yes" if KycSubmission.is_kyc_approved(member.customer_code) else "no"
+    representative_name = kyc_user.name
+    access_card_number = kyc_user.access_code
+    photograph_path = kyc_user.profile_picture
+
+    override = AuthRepChange.current_override_for(member.customer_code)
+    if override:
+        representative_name = override.new_representative_name
+        access_card_number = override.new_access_card_number or access_card_number
+        if override.new_photo:
+            photograph_path = override.new_photo.name
+
     return {
         "customer_code": member.customer_code,
         "entity_name": member.member_name,
@@ -45,9 +81,9 @@ def build_entity_view(kyc_user, member):
         "kyc_status": kyc_status,
         "annual_fee_status": "paid" if member.is_fee_paid else "unpaid",
         "voting_eligibility": "eligible" if kyc_user.elegible_user else "not_eligible",
-        "representative_name": kyc_user.name,
-        "access_card_number": kyc_user.access_code,
-        "photograph_path": kyc_user.profile_picture,
+        "representative_name": representative_name,
+        "access_card_number": access_card_number,
+        "photograph_path": photograph_path,
     }
 
 

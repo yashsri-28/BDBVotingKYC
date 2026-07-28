@@ -1,4 +1,5 @@
 import axios from "axios";
+// import { mediaUrl } from "../api/client";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
@@ -7,6 +8,10 @@ export const WS_BASE_URL = BASE_URL.replace(/^http/, "ws");
 
 // Member photographs are served from the same backend, under /media.
 export const MEDIA_BASE_URL = `${BASE_URL}/media`;
+
+
+export const mediaUrl = (path) =>
+  path ? `${import.meta.env.VITE_API_BASE_URL}/media/${path}` : null;
 
 export const api = axios.create({
   baseURL: `${BASE_URL}/api`,

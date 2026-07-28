@@ -1,62 +1,139 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import Logo from "./Logo";
+import { useToast } from "../context/ToastContext";
+
+const ROLE_LABELS = { admin: "Super Admin", supervisor: "Counter", counting: "Counting Login" };
+const ROLE_INITIALS = { admin: "SA", supervisor: "CT", counting: "CO" };
+
+const FY_OPTIONS = [
+  { value: "2026-27", label: "2026–27 (Active)" },
+  { value: "2027-28", label: "2027–28 (Upcoming)" },
+];
+
+const NAV_ITEMS = [
+  { path: "/search", label: "Counter Search & Issue", roles: ["supervisor", "admin"] },
+  { path: "/matrix", label: "Super Admin All-Counter Matrix", roles: ["admin", "counting"] },
+  { path: "/master-report", label: "Master Allotment Transaction Report", roles: ["supervisor", "admin", "counting"] },
+  { path: "/my-report", label: "My Counter Distribution Report", roles: ["supervisor"] },
+  { path: "/counting", label: "Vote Counting", roles: ["counting", "admin"] },
+  { path: "/results", label: "Live Results", roles: ["supervisor", "admin", "counting"] },
+  { path: "/users", label: "User Management", roles: ["admin"] },
+  { path: "/pool-allotment", label: "Pool Allotment", roles: ["admin"] },
+  { path: "/audit", label: "Audit Trail Log", roles: ["admin"] },
+];
 
 export default function TopBar() {
-  const { user, counter, signOut, isSupervisorOrAdmin } = useAuth();
+  const { user, signOut } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const [year, setYear] = useState(localStorage.getItem("bdb_year") || "2026-27");
+
+  const isArchiveYear = false; // reserved: year-wise DB isn't wired up on the backend yet
 
   async function handleSignOut() {
     await signOut();
     navigate("/login");
   }
 
-  const navItem = (path, label) => (
-    <button
-      onClick={() => navigate(path)}
-      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-        location.pathname === path
-          ? "bg-navy-900 text-white"
-          : "text-navy-800 hover:bg-ice-100"
-      }`}
-    >
-      {label}
-    </button>
-  );
+  function handleYearChange(e) {
+    const newYear = e.target.value;
+    setYear(newYear);
+    localStorage.setItem("bdb_year", newYear);
+    showToast("info", "Year context switch", `Switched active year to FY ${newYear}.`);
+  }
+
+  const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(user?.role));
 
   return (
-    <header className="border-b border-steel-200 bg-white">
-      <div className="h-1 brand-rule" />
-      <div className="mx-auto max-w-6xl px-6 py-3 flex items-center justify-between">
-        <Logo size="sm" />
-        <nav className="hidden md:flex items-center gap-1">
-          {navItem("/dashboard", "Verify")}
-          {navItem("/search", "Search")}
-          {isSupervisorOrAdmin && navItem("/audit", "Audit Log")}
-          {isSupervisorOrAdmin && navItem("/counters", "Counters")}
-        </nav>
-        <div className="flex items-center gap-4">
-          <div className="text-right hidden sm:block">
-            <div className="text-sm font-medium text-navy-900">{user?.full_name || user?.username}</div>
-            <div className="text-xs text-steel-400">
-              {user?.role === "staff" && counter ? `Counter ${counter.counter_number}` : user?.role}
+    <>
+      <header className="sticky top-0 z-40 border-b border-slate-800 bg-navy-900 text-white shadow-md">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl font-bold text-white shadow-md">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-base font-bold tracking-tight text-white">BDB Voting &amp; KYC Portal</span>
+                  <span className="rounded border border-blue-700/50 bg-blue-900/80 px-2 py-0.5 text-[10px] font-bold text-blue-300">v2.5</span>
+                </div>
+                <p className="text-[11px] text-slate-400">Elections Management, KYC Verification &amp; Ballot Allotment</p>
+              </div>
+            </div>
+
+            <div className="hidden items-center space-x-4 lg:flex">
+              <div className="flex items-center rounded-lg border border-slate-700 bg-slate-800 p-1">
+                <span className="flex items-center space-x-1 px-2 text-xs font-medium text-slate-400">
+                  <svg className="h-3.5 w-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>FY:</span>
+                </span>
+                <select
+                  value={year}
+                  onChange={handleYearChange}
+                  className="rounded border border-slate-700 bg-navy-950 px-2.5 py-1 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  {FY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <div className="hidden text-right sm:block">
+                <div className="text-xs font-bold text-slate-200">{user?.full_name || user?.username}</div>
+                <div className="flex items-center justify-end space-x-1 text-[10px] text-emerald-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                  <span>{ROLE_LABELS[user?.role] || user?.role}</span>
+                </div>
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-sm font-bold text-slate-300">
+                {ROLE_INITIALS[user?.role] || "U"}
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="ml-2 flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-300 transition-all hover:bg-rose-900/80 hover:text-rose-200"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="hidden md:inline">Logout</span>
+              </button>
             </div>
           </div>
-          <button
-            onClick={handleSignOut}
-            className="text-sm font-medium text-blocked-600 hover:text-blocked-600/80 border border-blocked-100 bg-blocked-100 px-3 py-1.5 rounded-md transition-colors"
-          >
-            Log out
-          </button>
         </div>
-      </div>
-      <nav className="md:hidden flex items-center gap-1 px-4 pb-2">
-        {navItem("/dashboard", "Verify")}
-        {navItem("/search", "Search")}
-        {isSupervisorOrAdmin && navItem("/audit", "Audit")}
-        {isSupervisorOrAdmin && navItem("/counters", "Counters")}
+
+        {isArchiveYear && (
+          <div className="flex items-center justify-center space-x-2 border-t border-b border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-center text-xs font-semibold text-amber-300">
+            <span>READ-ONLY ARCHIVE MODE — Viewing historical records for FY {year}. Modifications are disabled.</span>
+          </div>
+        )}
+      </header>
+
+      <nav className="sticky top-16 z-30 border-b border-slate-200 bg-white shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="custom-scrollbar flex space-x-1 overflow-x-auto py-2 sm:space-x-3">
+            {visibleItems.map((item) => (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`whitespace-nowrap rounded-lg border-b-2 px-3 py-2 text-xs font-medium transition-all ${
+                  location.pathname === item.path
+                    ? "border-blue-600 bg-blue-50 font-bold text-blue-700"
+                    : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </nav>
-    </header>
+    </>
   );
 }

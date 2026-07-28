@@ -1,71 +1,82 @@
-# BDB Voting — Election Verification Portal (Frontend)
+# BDB Voting & KYC Portal — Frontend
 
-React + Vite + Tailwind CSS v4 frontend for the Election Verification Module,
-built for Bharat Diamond Bourse.
+React + Vite + Tailwind CSS, rebuilt to match the working HTML/Alpine.js
+demo pixel-for-pixel (2026-07-28), wired to the real Django backend.
 
 ## Setup
-
 ```bash
 npm install
 ```
 
 ## Connect to the backend
-
-Edit `.env` (already created, copy from `.env.example` if you need a fresh one):
-
+Edit `.env`:
 ```
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
-That's the only variable needed — everything else is derived from it in code:
-- **WebSocket URL** (for real-time record-lock notifications) — `http://`/`https://` is swapped for `ws://`/`wss://` automatically (see `src/api/client.js` → `WS_BASE_URL`)
-- **Photo/media URL** — assumed to be the same backend under `/media` (see `src/api/client.js` → `MEDIA_BASE_URL`). If member photographs live on a different host, change that one line in `client.js`.
-
-Change `VITE_API_BASE_URL` if the backend runs on a different host/port
-(e.g. a server IP for a multi-counter setup).
-
-Any time you change `.env`, restart `npm run dev` — Vite only reads it on startup.
-
 ## Run
-
 ```bash
 npm run dev
 ```
+Opens at http://localhost:5173.
 
-Opens at http://localhost:5173. Log in with any Counter Staff login seeded on
-the backend (e.g. `counter1` / `counter12345`).
+## Roles (exactly 3 — no self-signup, Super Admin creates every login)
 
-## Build for production
+| Role | Backend value | Screens |
+|---|---|---|
+| Super Admin | `admin` | Everything — Counter Search, All-Counter Matrix, Master Report, User Management, Pool Allotment, Audit Trail, Vote Counting |
+| Counter | `supervisor` | Counter Search & Issue, Master Report (own rows only), My Distribution Report, Live Results |
+| Counting | `counting` | All-Counter Matrix (read-only), Master Report (read-only), Vote Counting, Live Results |
 
-```bash
-npm run build
-```
+Signing in redirects each role to the screen they actually use — Counting
+goes to the Matrix, everyone else to Counter Search.
 
-Output goes to `dist/` — serve it with any static file host (nginx, IIS, etc.)
-pointed at the same `VITE_API_BASE_URL`.
+## Screens
 
-## What's included
+- **Counter Search** (`/search`) — search an access card, see KYC DB data
+  (blue-tagged) and Voting DB data (purple-tagged) side by side, then
+  select and issue ballot codes. Already-allotted codes show locked with
+  a diagonal stripe pattern and "Already Allotted" flag; a "Verified
+  User" checkbox bulk-selects everything still open.
+- **All-Counter Matrix** (`/matrix`) — Super Admin (full) / Counting
+  (read-only): every counter's Distributed-to-Counter / Distributed-to-
+  Member / Balance, per pool type, with an efficiency progress bar.
+- **Master Allotment Transaction Report** (`/master-report`) — every
+  ballot allotment; a Counter sees only their own rows, Admin/Counting
+  see everything.
+- **My Counter Distribution Report** (`/my-report`, Counter only) — a
+  personal Received/Distributed/Balance ledger, Category and Exclusive
+  as parallel columns.
+- **User Management** (`/users`, Admin only) — create Counter/Counting
+  logins (password is generated and shown once), activate/deactivate,
+  reset password.
+- **Pool Allotment** (`/pool-allotment`, Admin only) — set base pool
+  totals and assign portions to each Counter.
+- **Audit Trail** (`/audit`, Admin only) — every action, timestamped.
+- **Vote Counting** (`/counting`, Counting + Admin) — enter ballots
+  during the counting stage.
+- **Live Results** (`/results`, everyone) — the public results board.
 
-- **Login** — JWT auth against `/api/auth/login/`
-- **Verify** (`/dashboard`) — the core counter workflow: enter/scan an access
-  card, resolve Scenario A (single entity) or Scenario B (representative maps
-  to multiple entities — pick one), lock the record, then Verify & Send for
-  Vote or Mark Not Eligible with a reason
-- **Search** (`/search`) — manual lookup by name, membership number, or
-  customer code
-- **Audit Log** (`/audit`, Supervisor/Admin only) — every action, timestamped
-- **Counters** (`/counters`, Supervisor/Admin only) — view-only list of which
-  HID reader each Counter Staff login is bound to
+## Design
+
+Matches the demo's actual Tailwind config, which turned out to be
+almost entirely Tailwind's own default palette:
+- `navy` (custom, added in `src/index.css` under `@theme`): `#1e293b` /
+  `#0f172a` / `#020617` — header and dark card headers
+- Everything else — `blue-600` (primary actions), `emerald-*` (verified/
+  paid/issued), `rose-*` (already-allotted/danger), `amber-*` (pending/
+  balance), `purple-*` (anything from the Voting DB, vs. blue for KYC
+  DB) — is Tailwind's default scale, unmodified
+- Inter for UI text, JetBrains Mono for every card number, access code,
+  ballot code, and timestamp
+
+## Toast notifications
+
+`src/context/ToastContext.jsx` — color-coded (success/warning/danger/
+info), top-right, auto-dismiss after 4s, matching the demo.
 
 ## Error handling
 
 All API errors are converted to plain, complete English sentences before
-being shown (see `src/api/client.js` → `getErrorMessage`) — no raw server
-tracebacks, status codes, or field-name jargon ever reach the screen.
-
-## Design
-
-Palette and type system are defined in `src/index.css` under `@theme` (Tailwind
-v4's CSS-based config) — navy/royal-blue/steel/gold, drawn from the Bharat
-Diamond Bourse mark, with Cormorant Garamond for display headings and Inter
-for UI text. Change tokens there to re-theme the whole app.
+display (`src/api/client.js` → `getErrorMessage`) — no raw tracebacks or
+status codes ever reach the screen.

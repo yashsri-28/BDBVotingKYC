@@ -76,3 +76,106 @@ from your real `Kyc_DB_new_3` tables. Test with real access codes from your
 - Excel export of verification records
 - Frontend (React) — not part of this backend package
 
+
+## Ballots module (added 2026-07-27, per Voting Module Review MoM)
+
+New app: `apps/ballots`. Role hierarchy remapped onto the existing
+CounterStaff roles (same stored values, new display labels):
+`admin` → **Super Admin**, `supervisor` → **Counter**, `staff` → **Operator**.
+
+### Setup
+```bash
+python manage.py makemigrations
+python manage.py migrate
+python manage.py import_electoral_rolls --clear
+```
+This imports both electoral rolls bundled in `data/` (Category Trade
+Member and Exclusive Member) into `ElectoralRoll`, matching each row to
+real KYC data by membership number where possible.
+
+**Confirmed ballot logic (2026-07-27):**
+- Category roll: tier I → 1 ballot, II → 2, III → 3
+- Exclusive roll: flat 1 ballot per member
+- Asterisk suffixes on membership numbers in both rolls are meaningless — stripped on import
+- Being on either roll means IN SCOPE for the election, not automatically eligible — Section 5 rules still decide eligibility at the counter
+
+### New endpoints
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/ballots/electoral-roll/?roll_type=&search=` | Browse imported rolls |
+| `GET /api/ballots/pools/` | View base pools |
+| `POST /api/ballots/pools/set-total/` | Super Admin only — set base pool total |
+| `GET /api/ballots/allocations/` | View counter allocations |
+| `POST /api/ballots/allocations/assign/` | Super Admin only — assign portion to a Counter |
+| `GET/POST /api/ballots/sub-entities/` | Manage a Counter's C01-C04 sub-units |
+| `GET/POST /api/ballots/operators/` | Manage named Operators under a Counter |
+| `GET /api/ballots/transactions/` | Read-only transaction log |
+| `POST /api/ballots/transactions/record/` | Record an Operator's +/- ballot activity |
+| `GET /api/ballots/dashboard/` | Super Admin's totals-across-counters overview |
+
+### Still separate from Ballots
+Ballot issuance is a distinct step AFTER verification (confirmed
+2026-07-27) — `apps/verification` is unchanged; `apps/ballots` is called
+next, separately, once a member has been verified.
+
+## Vote Counting module (added 2026-07-28, per Vote_counting.docx)
+
+New app: `apps/counting`, plus a new **Counting Login** role
+(`role="counting"`) created by the Super Admin. Counting logins exist only
+to enter counted ballots — they get no counter/verification screens.
+
+### Flow
+1. Super Admin creates the election categories and the Candidate Master.
+2. Super Admin starts a category. **Only one category may be in progress
+   at a time** — the others stay locked until it is completed, which is
+   what enforces the sequential counting requirement.
+3. The Counting user enters each ballot number and the serial numbers of
+   the candidates that ballot voted for.
+4. Super Admin completes the category, unlocking the next one.
+
+### Vote rules (confirmed 2026-07-28)
+| Ballot kind | Votes per ballot |
+|---|---|
+| Exclusive Member | exactly 1 |
+| Category Member | exactly 2, to two **different** candidates |
+
+### Validations, all enforced server-side
+- Counting must be open for that category
+- Duplicate ballot number within a category is rejected
+- Vote count must match exactly (Save is also disabled client-side)
+- The same candidate cannot receive both votes on one ballot
+- Every candidate serial entered must exist in the Candidate Master
+
+### Endpoints
+| Endpoint | Purpose |
+|---|---|
+| `GET/POST /api/counting/categories/` | Election categories (Super Admin writes) |
+| `POST /api/counting/categories/{id}/start/` | Open a category for counting |
+| `POST /api/counting/categories/{id}/complete/` | Close it, unlocking the next |
+| `GET/POST /api/counting/candidates/` | Candidate Master |
+| `POST /api/counting/categories/{id}/ballots/` | Record one counted ballot |
+| `GET /api/counting/categories/{id}/ballots/list/` | Recently entered ballots |
+| `DELETE /api/counting/ballots/{id}/` | Correct a wrongly-entered ballot |
+| `GET /api/counting/categories/{id}/live/` | Live totals, by serial and by leading vote |
+| `GET /api/counting/categories/{id}/report/detailed/` | Ballot-by-ballot grid |
+
+## Ballot allotment by customer code (added 2026-07-28)
+
+`apps/ballots/allotment_services.py` implements the counter's allotment
+screen (Consolidated Requirements section 3):
+
+- Searching an access card returns **every** customer code linked to it
+- Codes are **pre-selected by default** where they can be allotted
+- Only codes that pass the Section 5 eligibility rules are selectable —
+  an ineligible code shows its blocking reason and cannot be ticked
+- Saving locks the selected codes permanently; on a later search of the
+  same card they return flagged **Already Allotted** and greyed out,
+  while codes left unselected stay actionable
+- Every rule is re-checked server-side on save, so a client that sends an
+  already-allotted or ineligible code is rejected rather than trusted
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/ballots/allotment/search/` | Search a card, get all its codes with state |
+| `POST /api/ballots/allotment/allot/` | Allot the selected codes |
+| `GET /api/ballots/allotments/` | Allotment history (counters see their own) |

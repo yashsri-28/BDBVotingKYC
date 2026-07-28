@@ -16,8 +16,6 @@ from .validators import can_verify, show_eligibility_remark_checkbox
 from .exceptions import RecordLocked, NotAuthorizedRepresentative
 from .notifications import broadcast_lock_event
 
-from apps.accounts.ms_mailer import send_verification_approved_email, send_verification_rejected_email
-
 
 def _get_remark(customer_code):
     extras = EntityVotingExtras.objects.filter(customer_code=customer_code).first()
@@ -122,7 +120,6 @@ def verify_entity(customer_code, entity_view, user, action, remark="", rejection
                 customer_code=customer_code, defaults={"voting_eligibility_remark": remark}
             )
         AuditLog.record(actor=user, action="verified_sent_for_vote", entity_customer_code=customer_code, details={"remark": remark})
-        send_verification_approved_email(entity_view, verification_counter=counter_number)
 
     elif action == "not_eligible":
         if not rejection_reason:
@@ -136,7 +133,6 @@ def verify_entity(customer_code, entity_view, user, action, remark="", rejection
             verification_counter=counter_number, verified_at=timezone.now(),
         )
         AuditLog.record(actor=user, action="marked_not_eligible", entity_customer_code=customer_code, details={"rejection_reason": rejection_reason})
-        send_verification_rejected_email(entity_view, rejection_reason, verification_counter=counter_number)
     else:
         return None, "Invalid action"
 

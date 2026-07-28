@@ -3,14 +3,31 @@ from django.db import models
 
 
 class CounterStaff(AbstractUser):
-    """Election Counter Staff / Supervisor / Admin (BRD: 'Authenticate Counter Staff before access')."""
+    """
+    Election system login. Exactly 3 roles exist (confirmed 2026-07-28,
+    collapsing the earlier 4-role model -- 'Operator' was merged into
+    'Counter', since only Counter performs search + ballot allotment):
+
+      ADMIN      "Super Admin" -- full authority: creates every login,
+                 sets/allots ballot pools, changes Authorized Reps,
+                 sees every report and the audit trail.
+      SUPERVISOR "Counter"     -- normal operational user. Searches an
+                 access card, sees KYC + Voting data, allots ballots to
+                 members. Sees only their own distribution report.
+      COUNTING   "Counting"    -- read-only auditor for the counting
+                 stage. Sees the All-Counter Matrix and Master Report,
+                 no action buttons, cannot search-and-issue.
+
+    No self-signup anywhere -- every login here is created by a Super
+    Admin (see apps.accounts.views.UserManagementViewSet).
+    """
 
     class Role(models.TextChoices):
-        STAFF = "staff", "Counter Staff"
-        SUPERVISOR = "supervisor", "Supervisor"
-        ADMIN = "admin", "Admin"
+        SUPERVISOR = "supervisor", "Counter"
+        COUNTING = "counting", "Counting"
+        ADMIN = "admin", "Super Admin"
 
-    role = models.CharField(max_length=20, choices=Role.choices, default=Role.STAFF)
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.SUPERVISOR)
     employee_code = models.CharField(max_length=50, blank=True)
     is_active_shift = models.BooleanField(default=False)
 
@@ -21,5 +38,11 @@ class CounterStaff(AbstractUser):
         return f"{self.get_full_name() or self.username} ({self.get_role_display()})"
 
     @property
+    def is_super_admin(self):
+        return self.role == self.Role.ADMIN
+
+    @property
     def is_supervisor_or_admin(self):
+        # Name kept for backward compatibility with existing permission
+        # classes -- "supervisor" here means the Counter role.
         return self.role in (self.Role.SUPERVISOR, self.Role.ADMIN)
