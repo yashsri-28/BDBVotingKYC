@@ -15,6 +15,9 @@ import PoolAllotment from "./pages/PoolAllotment";
 import VoteCounting from "./pages/VoteCounting";
 import LiveResults from "./pages/LiveResults";
 
+
+import ManageEligibility from "./pages/ManageEligibility";
+
 function protect(element, allow) {
   return <ProtectedRoute allow={allow}><Layout>{element}</Layout></ProtectedRoute>;
 }
@@ -41,6 +44,7 @@ export default function App() {
             <Route path="/my-report" element={protect(<CounterOwnReport />, ["supervisor"])} />
             <Route path="/users" element={protect(<UserManagement />, ["admin"])} />
             <Route path="/pool-allotment" element={protect(<PoolAllotment />, ["admin"])} />
+            <Route path="/eligibility" element={protect(<ManageEligibility />, ["admin"])} />
             <Route path="/audit" element={protect(<AuditTrail />, ["admin"])} />
             <Route path="/counting" element={protect(<VoteCounting />, ["counting", "admin"])} />
             <Route path="/results" element={protect(<LiveResults />, undefined)} />

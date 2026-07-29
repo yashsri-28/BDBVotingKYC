@@ -57,7 +57,7 @@ def build_entity_view(kyc_user, member):
     override wins over the live (read-only) KYC Portal data. Imported
     lazily to avoid a module-load-order dependency between the two apps.
     """
-    from apps.ballots.models import AuthRepChange
+    from apps.ballots.models import AuthRepChange, VotingEligibility
 
     kyc_status = "yes" if KycSubmission.is_kyc_approved(member.customer_code) else "no"
     representative_name = kyc_user.name
@@ -71,6 +71,24 @@ def build_entity_view(kyc_user, member):
         if override.new_photo:
             photograph_path = override.new_photo.name
 
+    eligibility_override = VotingEligibility.objects.filter(customer_code=member.customer_code).first()
+    # if eligibility_override:
+    #     voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
+    #     eligibility_source = "admin_override"
+    #     eligibility_remark = eligibility_override.remarks
+    # else:
+    #     voting_eligibility = "eligible" if kyc_user.elegible_user else "not_eligible"
+    #     eligibility_source = "kyc_db"
+    #     eligibility_remark = ""
+    eligibility_override = VotingEligibility.objects.filter(customer_code=member.customer_code).first()
+    if eligibility_override:
+        voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
+        eligibility_remark = eligibility_override.remarks
+    else:
+        voting_eligibility = "eligible"   # entry nahi hai -> default eligible, KYC DB ko touch nahi karna
+        eligibility_remark = ""
+    eligibility_source = "voting_db"
+
     return {
         "customer_code": member.customer_code,
         "entity_name": member.member_name,
@@ -80,12 +98,17 @@ def build_entity_view(kyc_user, member):
         "membership_status": "active" if member.is_membership_active else "inactive",
         "kyc_status": kyc_status,
         "annual_fee_status": "paid" if member.is_fee_paid else "unpaid",
-        "voting_eligibility": "eligible" if kyc_user.elegible_user else "not_eligible",
+        "voting_eligibility": voting_eligibility,
+        "eligibility_source": eligibility_source,
+        "eligibility_remark": eligibility_remark,
         "representative_name": representative_name,
         "access_card_number": access_card_number,
         "photograph_path": photograph_path,
-    }
 
+        "is_rep_changed": override is not None,
+        "rep_changed_at": override.changed_at if override else None,
+        "rep_changed_by": override.changed_by.username if override else None,
+    }
 
 def get_entity_view_by_customer_code(customer_code):
     """Used by lock/verify endpoints, which operate on customer_code directly (not a fresh card tap)."""

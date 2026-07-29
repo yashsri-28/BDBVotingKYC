@@ -35,7 +35,7 @@ Full Django REST backend, now wired to the REAL KYC Portal data (2026-07-23 upda
 
 **Confirmed real behavior:** one `access_code` can map to multiple `users` rows
 (different `customer_code` each) — this is exactly Scenario B (multi-entity
-representative). Verified with real duplicate example `GEM209202` → two
+representative). Verified with real duplicate example `GEM0000` → two
 different entities under "ANOOP VRAJLAL MEHTA".
 
 ## Setup

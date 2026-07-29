@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { path: "/results", label: "Live Results", roles: ["supervisor", "admin", "counting"] },
   { path: "/users", label: "User Management", roles: ["admin"] },
   { path: "/pool-allotment", label: "Pool Allotment", roles: ["admin"] },
+  { path: "/eligibility", label: "Manage Eligibility", roles: ["admin"] },
   { path: "/audit", label: "Audit Trail Log", roles: ["admin"] },
 ];
 

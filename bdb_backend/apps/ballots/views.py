@@ -11,14 +11,17 @@ from apps.audit.models import AuditLog
 from apps.kyc_portal.services import get_entity_view_by_customer_code
 
 from . import allotment_services, services
+from apps.kyc_portal.models import KycUser
 from .models import (
     AuthRepChange, BallotPool, CounterBallotAllocation, CustomerCodeAllotment, ElectoralRoll,
+    VotingEligibility,
 )
 from .serializers import (
     AllotCodesRequestSerializer, AllotmentSearchRequestSerializer, AllotmentSearchResultSerializer,
     AssignAllocationSerializer, AuthRepChangeSerializer, BallotPoolSerializer,
     CounterBallotAllocationSerializer, CustomerCodeAllotmentSerializer,
     ElectoralRollSerializer, SetPoolTotalSerializer,
+    SetVotingEligibilitySerializer, VotingEligibilitySerializer,
 )
 
 CounterStaff = get_user_model()
@@ -246,3 +249,23 @@ class AuthRepChangeHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         qs = super().get_queryset()
         code = self.request.query_params.get("customer_code")
         return qs.filter(customer_code=code) if code else qs
+
+
+
+class SetVotingEligibilityView(APIView):
+    """POST /api/ballots/voting-eligibility/set/ — Super Admin only."""
+    permission_classes = [IsSuperAdmin]
+
+    @_tag
+    def post(self, request):
+        serializer = SetVotingEligibilitySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        obj = services.set_voting_eligibility(
+            customer_code=data["customer_code"],
+            is_eligible=data["is_eligible"],
+            remark=data.get("remark", ""),
+            actor=request.user,
+        )
+        return Response(VotingEligibilitySerializer(obj).data, status=status.HTTP_200_OK)

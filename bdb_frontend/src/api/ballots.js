@@ -70,3 +70,19 @@ export async function fetchAuthRepHistory(customerCode) {
   const { data } = await api.get("/ballots/auth-rep-change/history/", { params: { customer_code: customerCode } });
   return data.results || data;
 }
+
+
+
+export async function setVotingEligibility(customerCode, isEligible, remark) {
+  const { data } = await api.post("/ballots/voting-eligibility/set/", {
+    customer_code: customerCode,
+    is_eligible: isEligible,
+    remark,
+  });
+  return data;
+}
+
+export async function searchEntityByCustomerCode(customerCode) {
+  const { data } = await api.get("/kyc/manual-search/", { params: { q: customerCode } });
+  return data;
+}

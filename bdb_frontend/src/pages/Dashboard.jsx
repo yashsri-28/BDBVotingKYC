@@ -139,7 +139,7 @@ export default function Dashboard() {
             type="text"
             value={cardNumber}
             onChange={(e) => setCardNumber(e.target.value)}
-            placeholder="Access card number, e.g. GEM209202"
+            placeholder="Access card number, e.g. GEM00000"
             className="flex-1 rounded-lg border border-steel-200 px-4 py-3 text-navy-900 placeholder:text-steel-300 focus:border-royal-500 focus:ring-1 focus:ring-royal-500 outline-none transition font-mono"
           />
           <button

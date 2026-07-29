@@ -31,9 +31,10 @@ class ElectoralRoll(models.Model):
     automatically eligible. Eligibility is still decided by the Section 5
     business rules (membership active, fee paid, KYC done) at the counter.
 
-    Confirmed ballot logic (2026-07-27):
-      - Category roll: Category I -> 1 ballot, II -> 2, III -> 3
-      - Exclusive roll: flat 1 ballot per member (no tier column exists)
+    Confirmed ballot logic (updated 2026-07-29):
+      - Every entity (Category or Exclusive, any tier) gets exactly 1 ballot.
+      - Tier (I/II/III) still matters for vote-marking CAPACITY during
+        counting (apps.counting), not for ballot count at allotment time.
     """
 
     class CategoryTier(models.TextChoices):
@@ -65,10 +66,7 @@ class ElectoralRoll(models.Model):
         return f"{self.entity_name} ({self.membership_no}) — {self.get_roll_type_display()}"
 
     def save(self, *args, **kwargs):
-        if self.roll_type == RollType.EXCLUSIVE:
-            self.ballot_entitlement = 1
-        elif self.category_tier:
-            self.ballot_entitlement = {"I": 1, "II": 2, "III": 3}[self.category_tier]
+        self.ballot_entitlement = 1
         super().save(*args, **kwargs)
 
 
@@ -154,6 +152,10 @@ class CustomerCodeAllotment(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="allotments"
     )
     allotted_at = models.DateTimeField(auto_now_add=True)
+    membership_status_at_allotment = models.CharField(max_length=10, blank=True)
+    fee_status_at_allotment = models.CharField(max_length=10, blank=True)
+    voting_eligibility_source = models.CharField(max_length=20, blank=True)
+    eligibility_remark_at_allotment = models.CharField(max_length=255, blank=True)
 
     class Meta:
         constraints = [
@@ -169,6 +171,11 @@ class CustomerCodeAllotment(models.Model):
 
     def __str__(self):
         return f"{self.customer_code} — {self.ballots_allotted} ballot(s) [{self.roll_type}]"
+
+
+
+
+
 
 
 class AuthRepChange(models.Model):
@@ -201,3 +208,28 @@ class AuthRepChange(models.Model):
     def current_override_for(cls, customer_code):
         """The most recent change for a customer code, if any."""
         return cls.objects.filter(customer_code=customer_code).order_by("-changed_at").first()
+
+
+
+class VotingEligibility(models.Model):
+    """
+    Voting eligibility flag -- owned entirely by Voting DB.
+    Default = True (entry na ho to eligible maana jayega).
+    SuperAdmin hi is override ko create/change kar sakta hai.
+    Jab is_eligible=True manually set ho aur original KYC eligibility
+    fail thi, remark mandatory hai (enforced in service layer, Step 3).
+    """
+
+    customer_code = models.CharField(max_length=50, unique=True)
+    is_eligible = models.BooleanField(default=True)
+    remarks = models.CharField(max_length=255, blank=True)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["customer_code"])]
+
+    def __str__(self):
+        return f"{self.customer_code}: {'Eligible' if self.is_eligible else 'Not Eligible'}"

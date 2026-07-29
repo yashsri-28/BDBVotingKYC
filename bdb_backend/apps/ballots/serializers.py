@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from .models import (
     ElectoralRoll, BallotPool, CounterBallotAllocation, CustomerCodeAllotment, AuthRepChange,
+    VotingEligibility,
 )
 
 
@@ -114,3 +115,19 @@ class AuthRepChangeSerializer(serializers.ModelSerializer):
             "changed_by_username", "changed_at",
         ]
         read_only_fields = ["old_representative_name", "old_access_card_number", "changed_by_username", "changed_at"]
+
+
+
+
+class SetVotingEligibilitySerializer(serializers.Serializer):
+    customer_code = serializers.CharField()
+    is_eligible = serializers.BooleanField()
+    remark = serializers.CharField(required=False, allow_blank=True)
+
+
+class VotingEligibilitySerializer(serializers.ModelSerializer):
+    updated_by_username = serializers.CharField(source="updated_by.username", read_only=True, default=None)
+
+    class Meta:
+        model = VotingEligibility
+        fields = ["id", "customer_code", "is_eligible", "remarks", "updated_by_username", "updated_at"]

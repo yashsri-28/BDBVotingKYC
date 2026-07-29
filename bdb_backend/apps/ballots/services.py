@@ -10,6 +10,11 @@ from .exceptions import ExceedsPoolTotal
 from apps.audit.models import AuditLog
 
 
+
+from django.core.exceptions import ValidationError
+from .models import VotingEligibility
+
+
 @transaction.atomic
 def set_pool_total(roll_type, total_ballots, actor):
     """Super Admin only — enforced at the view/permission layer."""
@@ -85,3 +90,28 @@ def counter_own_summary(counter):
             "balance": allocation.remaining_count,
         })
     return rows
+
+@transaction.atomic
+def set_voting_eligibility(customer_code, is_eligible, remark, actor):
+    """
+    Super Admin only — enforced at the view/permission layer.
+    Remark is mandatory for every override (both eligible and not-eligible),
+    so there is always a traceable reason in the audit trail.
+    """
+    if not (remark or "").strip():
+        raise ValidationError("Remark is mandatory when setting voting eligibility.")
+
+    obj, _created = VotingEligibility.objects.update_or_create(
+        customer_code=customer_code,
+        defaults={
+            "is_eligible": is_eligible,
+            "remarks": remark,
+            "updated_by": actor,
+        },
+    )
+
+    AuditLog.record(
+        actor=actor, action="voting_eligibility_set",
+        details={"customer_code": customer_code, "is_eligible": is_eligible, "remark": remark},
+    )
+    return obj
