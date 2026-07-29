@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { path: "/pool-allotment", label: "Pool Allotment", roles: ["admin"] },
   { path: "/eligibility", label: "Manage Eligibility", roles: ["admin"] },
   { path: "/audit", label: "Audit Trail Log", roles: ["admin"] },
+  { path: "/superadmin-actions", label: "SuperAdmin Actions Report", roles: ["admin"] },
 ];
 
 export default function TopBar() {

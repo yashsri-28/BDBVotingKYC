@@ -4,6 +4,9 @@ import { ToastProvider } from "./context/ToastContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Layout from "./components/Layout";
 
+
+import SuperAdminActionsReport from "./pages/SuperAdminActionsReport";
+
 import Login from "./pages/Login";
 import CounterSearch from "./pages/CounterSearch";
 import AdminMatrix from "./pages/AdminMatrix";
@@ -48,6 +51,7 @@ export default function App() {
             <Route path="/audit" element={protect(<AuditTrail />, ["admin"])} />
             <Route path="/counting" element={protect(<VoteCounting />, ["counting", "admin"])} />
             <Route path="/results" element={protect(<LiveResults />, undefined)} />
+            <Route path="/superadmin-actions" element={protect(<SuperAdminActionsReport />, ["admin"])} />
 
             <Route path="/" element={<HomeRedirect />} />
             <Route path="*" element={<HomeRedirect />} />

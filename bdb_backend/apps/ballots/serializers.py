@@ -73,6 +73,9 @@ class AllotmentCustomerCodeSerializer(serializers.Serializer):
     allotted_at = serializers.DateTimeField(allow_null=True)
     default_selected = serializers.BooleanField()
     selectable = serializers.BooleanField()
+    eligibility_source = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    eligibility_remark = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    eligibility_updated_by = serializers.CharField(required=False, allow_null=True)
 
 
 class AllotmentSearchResultSerializer(serializers.Serializer):

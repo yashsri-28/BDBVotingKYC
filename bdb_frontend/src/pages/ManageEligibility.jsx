@@ -95,8 +95,8 @@ function EligibilityRow({ entity, showToast }) {
           <p className="font-mono text-sm font-bold text-slate-900">{entity.customer_code}</p>
           <p className="text-sm text-slate-700">{entity.entity_name}</p>
         </div>
-        <span className={`rounded px-2.5 py-1 text-xs font-bold ${entity.voting_eligibility === "eligible" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
-          Current: {entity.voting_eligibility === "eligible" ? "Eligible" : "Not Eligible"}
+        <span className={`rounded px-2.5 py-1 text-xs font-bold ${isEligible ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
+          Current: {isEligible ? "Eligible" : "Not Eligible"}
         </span>
       </div>
 
@@ -106,14 +106,32 @@ function EligibilityRow({ entity, showToast }) {
         </p>
       )}
 
+    <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <span className="block font-bold uppercase text-slate-500">KYC Status</span>
+            <span className={`font-bold ${entity.kyc_status === "yes" ? "text-emerald-700" : "text-amber-700"}`}>
+              {entity.kyc_status === "yes" ? "Approved" : "Pending"}
+            </span>
+          </div>
+          <div>
+            <span className="block font-bold uppercase text-slate-500">Online Payment (KYC DB)</span>
+            <span className={`font-bold ${entity.annual_fee_status === "paid" ? "text-emerald-700" : "text-rose-700"}`}>
+              {entity.annual_fee_status === "paid" ? "Paid" : "Not Paid"}
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div className="mt-3 flex flex-wrap items-center gap-3">
+        <span className="text-xs font-bold text-slate-700">On the Spot Payment:</span>
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
           <input
             type="radio"
             checked={isEligible === true}
             onChange={() => setIsEligible(true)}
           />
-          Eligible
+          Yes
         </label>
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
           <input
@@ -121,8 +139,15 @@ function EligibilityRow({ entity, showToast }) {
             checked={isEligible === false}
             onChange={() => setIsEligible(false)}
           />
-          Not Eligible
+          No
         </label>
+      </div>
+
+      <div className="mt-2 rounded-lg border border-blue-100 bg-blue-50/60 p-2 text-xs">
+        <span className="font-bold text-blue-800">Final Status (calculated): </span>
+        <span className={`font-bold ${isEligible ? "text-emerald-700" : "text-rose-700"}`}>
+          {isEligible ? "Eligible" : "Not Eligible"}
+        </span>
       </div>
 
       <div className="mt-3 flex items-center gap-3">

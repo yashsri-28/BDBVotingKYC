@@ -47,8 +47,13 @@ from django.views.decorators.http import require_GET
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("apps.accounts.urls")),
+    path("api/", include("apps.counters.urls")),
+    path("api/", include("apps.kyc_portal.urls")),
+    path("api/", include("apps.sipass_integration.urls")),
+    path("api/", include("apps.verification.urls")),
+    path("api/", include("apps.audit.urls")),
     path("api/", include("apps.ballots.urls")),
-    # ... baaki saare existing paths jo already file mein hain, unhe mat chhedo
+    path("api/", include("apps.counting.urls")),
 ]
 
 # ---------------------------------------------------------------------------

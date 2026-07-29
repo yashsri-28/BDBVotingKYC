@@ -111,3 +111,38 @@ class KycSubmission(models.Model):
     @classmethod
     def is_kyc_approved(cls, customer_code):
         return cls.latest_status_for(customer_code) == "Approved"
+
+
+
+class OnlinePayment(models.Model):
+    """
+    Maps to `online_payments` — the actual payment transaction log.
+    Used to derive Annual Fee Paid/Unpaid status per customer_code,
+    based on the LATEST payment record for that code (replaces
+    members_master.membership_fees_status as the source of truth).
+    """
+
+    fee_type = models.CharField(max_length=50, blank=True, null=True)
+    payment_year = models.CharField(max_length=20, blank=True, null=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    status = models.CharField(max_length=20, blank=True, null=True)  # "Paid" / "pending" / "Failed"
+    payment_date = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True)
+    customer_code = models.CharField(max_length=50, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "online_payments"
+
+    @classmethod
+    def latest_status_for(cls, customer_code):
+        latest = (
+            cls.objects.filter(customer_code=customer_code)
+            .order_by("-created_at", "-id")
+            .first()
+        )
+        return latest.status if latest else None
+
+    @classmethod
+    def is_fee_paid(cls, customer_code):
+        return cls.latest_status_for(customer_code) == "Paid"

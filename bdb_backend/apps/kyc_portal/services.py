@@ -47,19 +47,32 @@ def get_member_for_user(kyc_user):
 
 def build_entity_view(kyc_user, member):
     """
-    Combines KycUser + MembersMaster + derived KYC status into the single
-    flat structure the rest of the app (validators, serializers) expects.
-    Not a Django model — just a plain dict, since the "Entity" concept here
-    is assembled from two different real tables.
+    Combines KycUser + MembersMaster + derived KYC/payment status into the
+    single flat structure the rest of the app (validators, serializers)
+    expects. Not a Django model — just a plain dict, since the "Entity"
+    concept here is assembled from multiple real tables + Voting DB.
 
     Checks apps.ballots.models.AuthRepChange first: if a Super Admin has
     changed the Authorized Representative for this customer code, that
-    override wins over the live (read-only) KYC Portal data. Imported
-    lazily to avoid a module-load-order dependency between the two apps.
+    override wins over the live (read-only) KYC Portal data.
+
+    Voting eligibility decision table (confirmed 2026-07-29):
+      1. SuperAdmin override (VotingEligibility) exists -> that wins,
+         whatever it says (Eligible or Not Eligible), with its remark.
+      2. No override -> online payment (online_payments, latest record)
+         must be "Paid" AND KYC (kyc_submissions, latest) must be
+         "Approved" for the entity to be Eligible.
+      3. Anything else -> Not Eligible.
     """
     from apps.ballots.models import AuthRepChange, VotingEligibility
+    from .models import OnlinePayment
 
-    kyc_status = "yes" if KycSubmission.is_kyc_approved(member.customer_code) else "no"
+    kyc_approved = KycSubmission.is_kyc_approved(member.customer_code)
+    kyc_status = "yes" if kyc_approved else "no"
+
+    fee_paid = OnlinePayment.is_fee_paid(member.customer_code)
+    annual_fee_status = "paid" if fee_paid else "unpaid"
+
     representative_name = kyc_user.name
     access_card_number = kyc_user.access_code
     photograph_path = kyc_user.profile_picture
@@ -72,22 +85,37 @@ def build_entity_view(kyc_user, member):
             photograph_path = override.new_photo.name
 
     eligibility_override = VotingEligibility.objects.filter(customer_code=member.customer_code).first()
+
     # if eligibility_override:
+    #     # Rule 1: SuperAdmin's manual on-the-spot decision always wins.
     #     voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
     #     eligibility_source = "admin_override"
     #     eligibility_remark = eligibility_override.remarks
-    # else:
-    #     voting_eligibility = "eligible" if kyc_user.elegible_user else "not_eligible"
-    #     eligibility_source = "kyc_db"
+    # elif fee_paid and kyc_approved:
+    #     # Rule 2: normal path -- online payment done AND KYC approved.
+    #     voting_eligibility = "eligible"
+    #     eligibility_source = "online_payment_kyc"
     #     eligibility_remark = ""
-    eligibility_override = VotingEligibility.objects.filter(customer_code=member.customer_code).first()
+    # else:
+    #     # Rule 3: everything else is Not Eligible until SuperAdmin overrides.
+    #     voting_eligibility = "not_eligible"
+    #     eligibility_source = "online_payment_kyc"
+    #     eligibility_remark = ""
     if eligibility_override:
         voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
+        eligibility_source = "admin_override"
         eligibility_remark = eligibility_override.remarks
-    else:
-        voting_eligibility = "eligible"   # entry nahi hai -> default eligible, KYC DB ko touch nahi karna
+        eligibility_updated_by = eligibility_override.updated_by.username if eligibility_override.updated_by else None
+    elif fee_paid and kyc_approved:
+        voting_eligibility = "eligible"
+        eligibility_source = "online_payment_kyc"
         eligibility_remark = ""
-    eligibility_source = "voting_db"
+        eligibility_updated_by = None
+    else:
+        voting_eligibility = "not_eligible"
+        eligibility_source = "online_payment_kyc"
+        eligibility_remark = ""
+        eligibility_updated_by = None
 
     return {
         "customer_code": member.customer_code,
@@ -97,13 +125,14 @@ def build_entity_view(kyc_user, member):
         "member_group": member.group_name,
         "membership_status": "active" if member.is_membership_active else "inactive",
         "kyc_status": kyc_status,
-        "annual_fee_status": "paid" if member.is_fee_paid else "unpaid",
+        "annual_fee_status": annual_fee_status,
         "voting_eligibility": voting_eligibility,
         "eligibility_source": eligibility_source,
         "eligibility_remark": eligibility_remark,
         "representative_name": representative_name,
         "access_card_number": access_card_number,
         "photograph_path": photograph_path,
+        "eligibility_updated_by": eligibility_updated_by,
 
         "is_rep_changed": override is not None,
         "rep_changed_at": override.changed_at if override else None,
@@ -123,9 +152,7 @@ def get_entity_view_by_customer_code(customer_code):
 
 def manual_search(query):
     """
-    Manual search by Membership No. / Customer Code / Entity Name / Rep Name.
-    Representative name lives in `users`, everything else in `members_master`
-    — search both, then resolve to entity views.
+    Manual search by Membership No. / Customer Code / Entity Name / Rep Name / Access Card.
     """
     members = MembersMaster.objects.filter(
         Q(membership_no__icontains=query)
@@ -134,7 +161,9 @@ def manual_search(query):
     )
     matching_codes = set(members.values_list("customer_code", flat=True))
 
-    rep_matches = KycUser.objects.filter(name__icontains=query).exclude(sap_code__isnull=True)
+    rep_matches = KycUser.objects.filter(
+        Q(name__icontains=query) | Q(access_code__icontains=query)
+    ).exclude(sap_code__isnull=True)
     matching_codes.update(rep_matches.values_list("sap_code", flat=True))
 
     results = []
