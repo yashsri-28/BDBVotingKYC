@@ -477,13 +477,15 @@
 
 
 
-import { useState } from "react";
+// import { useState } from "react";
+import { useState, useEffect } from "react";
 import { searchAccessCard, allotCustomerCodes } from "../api/ballots";
 import { getErrorMessage } from "../api/client";
 import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
 import AuthRepModal from "../components/AuthRepModal";
 import { mediaUrl } from "../api/client";
+import { fetchMySummary } from "../api/ballots";
 
 function initials(name = "") {
   return name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
@@ -505,9 +507,23 @@ export default function CounterSearch() {
 
   const [step, setStep] = useState("select"); // "select" | "confirm"
 
+  const [mySummary, setMySummary] = useState([]);
+
   const isArchiveYear = false;
   const canEditAuthRep = user?.role === "admin";
 
+  useEffect(() => {
+    loadMySummary();
+  }, []);
+
+  async function loadMySummary() {
+    try {
+      const data = await fetchMySummary();
+      setMySummary(data);
+    } catch {
+      // Silent fail — balance display is a convenience, not critical.
+    }
+  }
 async function runSearch(card) {
     setError("");
     if (!card.trim()) {
@@ -561,7 +577,7 @@ async function runSearch(card) {
     setVerifiedCheck(false);
   }
 
-  async function handleIssue() {
+ async function handleIssue() {
     if (selected.size === 0 || isArchiveYear) return;
     setSaving(true);
     try {
@@ -572,6 +588,7 @@ async function runSearch(card) {
       setSelected(new Set());
       setVerifiedCheck(false);
       setStep("select");
+      loadMySummary();
     } catch (err) {
       showToast("danger", "Could not issue ballots", getErrorMessage(err, "Please review and try again."));
     } finally {
@@ -587,8 +604,8 @@ async function runSearch(card) {
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       {/* Search bar */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="w-full max-w-xl flex-1 sm:w-auto">
             <label className="mb-1.5 flex items-center space-x-1 text-xs font-bold uppercase tracking-wider text-slate-700">
               <svg className="h-3.5 w-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -610,6 +627,18 @@ async function runSearch(card) {
               </button>
             </form>
           </div>
+          {mySummary.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              {mySummary.map((row) => (
+                <div
+                  key={row.roll_type}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${row.balance === 0 ? "border-rose-200 bg-rose-50 text-rose-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}
+                >
+                  {row.roll_type === "category" ? "Category" : "Exclusive"}: {row.balance} / {row.received} left
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         {error && <p className="mt-3 text-xs font-medium text-rose-600">{error}</p>}
       </div>
@@ -881,7 +910,7 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            Auth Rep (Voting DB):
+            Final Auth Rep:
           </span>
           <span
             className="font-bold text-purple-950"

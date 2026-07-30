@@ -22,6 +22,7 @@ from apps.verification.models import VerificationRecord
 from apps.verification.validators import can_verify
 
 from .models import CustomerCodeAllotment, ElectoralRoll, RollType
+from .models import BallotPool, CounterBallotAllocation
 
 
 class AllotmentError(Exception):
@@ -134,6 +135,26 @@ def allot_customer_codes(access_card_number, customer_codes, actor):
         raise AllotmentError(
             f"These customer codes are not on the electoral roll for this election: {', '.join(off_roll)}."
         )
+
+    # Check the Counter's remaining balance per roll type before allotting.
+    requested_by_roll = {}
+    for code in customer_codes:
+        roll_type = by_code[code]["roll_type"]
+        requested_by_roll[roll_type] = requested_by_roll.get(roll_type, 0) + by_code[code]["ballot_entitlement"]
+
+    for roll_type, requested_count in requested_by_roll.items():
+        pool = BallotPool.objects.filter(roll_type=roll_type).first()
+        allocation = (
+            CounterBallotAllocation.objects.filter(pool=pool, counter=actor).first()
+            if pool else None
+        )
+        remaining = allocation.remaining_count if allocation else 0
+        if requested_count > remaining:
+            raise AllotmentError(
+                f"Not enough {roll_type} ballots remaining in your pool "
+                f"(you have {remaining} left, this allotment needs {requested_count}). "
+                f"Contact SuperAdmin to receive more ballots."
+            )
 
     created = []
     for code in customer_codes:
