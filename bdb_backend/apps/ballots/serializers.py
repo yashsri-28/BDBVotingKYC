@@ -76,7 +76,7 @@ class AllotmentCustomerCodeSerializer(serializers.Serializer):
     eligibility_source = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     eligibility_remark = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     eligibility_updated_by = serializers.CharField(required=False, allow_null=True)
-
+    voting_done = serializers.BooleanField(required=False)
 
 class AllotmentSearchResultSerializer(serializers.Serializer):
     access_card_number = serializers.CharField()
@@ -134,3 +134,14 @@ class VotingEligibilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = VotingEligibility
         fields = ["id", "customer_code", "is_eligible", "remarks", "updated_by_username", "updated_at"]
+
+
+class AdjustPoolTotalSerializer(serializers.Serializer):
+    roll_type = serializers.ChoiceField(choices=["category", "exclusive"])
+    delta = serializers.IntegerField(help_text="Positive to add, negative to subtract")
+
+
+class AdjustAllocationSerializer(serializers.Serializer):
+    roll_type = serializers.ChoiceField(choices=["category", "exclusive"])
+    counter = serializers.IntegerField()
+    delta = serializers.IntegerField(help_text="Positive to add, negative to subtract")        

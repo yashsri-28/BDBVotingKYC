@@ -89,10 +89,35 @@ class UserManagementViewSet(viewsets.ModelViewSet):
         AuditLog.record(actor=request.user, action="login_activated", details={"username": user.username})
         return Response(LoginListSerializer(user).data)
 
+    # @action(detail=True, methods=["post"], url_path="deactivate")
+    # @swagger_auto_schema(tags=["User Management"], request_body=None)
+    # def deactivate(self, request, pk=None):
+    #     user = self.get_object()
+    #     user.is_active = False
+    #     user.save(update_fields=["is_active"])
+    #     AuditLog.record(actor=request.user, action="login_deactivated", details={"username": user.username})
+    #     return Response(LoginListSerializer(user).data)
     @action(detail=True, methods=["post"], url_path="deactivate")
     @swagger_auto_schema(tags=["User Management"], request_body=None)
     def deactivate(self, request, pk=None):
         user = self.get_object()
+
+        if user.pk == request.user.pk:
+            return Response(
+                {"detail": "You cannot deactivate your own account."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if user.role == CounterStaff.Role.ADMIN:
+            other_active_admins = CounterStaff.objects.filter(
+                role=CounterStaff.Role.ADMIN, is_active=True
+            ).exclude(pk=user.pk).count()
+            if other_active_admins == 0:
+                return Response(
+                    {"detail": "Cannot deactivate the last active Super Admin."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         user.is_active = False
         user.save(update_fields=["is_active"])
         AuditLog.record(actor=request.user, action="login_deactivated", details={"username": user.username})

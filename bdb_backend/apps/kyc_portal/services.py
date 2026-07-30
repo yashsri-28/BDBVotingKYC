@@ -66,6 +66,7 @@ def build_entity_view(kyc_user, member):
     """
     from apps.ballots.models import AuthRepChange, VotingEligibility
     from .models import OnlinePayment
+    from apps.ballots.models import VotingStatus
 
     kyc_approved = KycSubmission.is_kyc_approved(member.customer_code)
     kyc_status = "yes" if kyc_approved else "no"
@@ -85,6 +86,8 @@ def build_entity_view(kyc_user, member):
             photograph_path = override.new_photo.name
 
     eligibility_override = VotingEligibility.objects.filter(customer_code=member.customer_code).first()
+    voting_status = VotingStatus.objects.filter(customer_code=member.customer_code).first()
+    voting_done = voting_status.voting_done if voting_status else False
 
     # if eligibility_override:
     #     # Rule 1: SuperAdmin's manual on-the-spot decision always wins.
@@ -133,6 +136,7 @@ def build_entity_view(kyc_user, member):
         "access_card_number": access_card_number,
         "photograph_path": photograph_path,
         "eligibility_updated_by": eligibility_updated_by,
+        "voting_done": voting_done,
 
         "is_rep_changed": override is not None,
         "rep_changed_at": override.changed_at if override else None,

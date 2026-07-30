@@ -20,9 +20,12 @@ from apps.audit.models import AuditLog
 from apps.kyc_portal.services import find_users_by_card, get_member_for_user, build_entity_view
 from apps.verification.models import VerificationRecord
 from apps.verification.validators import can_verify
+from django.utils import timezone
 
 from .models import CustomerCodeAllotment, ElectoralRoll, RollType
 from .models import BallotPool, CounterBallotAllocation
+
+from .models import VotingStatus
 
 
 class AllotmentError(Exception):
@@ -156,6 +159,8 @@ def allot_customer_codes(access_card_number, customer_codes, actor):
                 f"Contact SuperAdmin to receive more ballots."
             )
 
+
+
     created = []
     for code in customer_codes:
         entry = by_code[code]
@@ -167,6 +172,10 @@ def allot_customer_codes(access_card_number, customer_codes, actor):
             ballots_allotted=entry["ballot_entitlement"],
             allotted_by=actor,
         ))
+        VotingStatus.objects.update_or_create(
+            customer_code=code,
+            defaults={"voting_done": True, "marked_at": timezone.now()},
+        )
 
     AuditLog.record(
         actor=actor, action="ballots_allotted",

@@ -233,3 +233,29 @@ class VotingEligibility(models.Model):
 
     def __str__(self):
         return f"{self.customer_code}: {'Eligible' if self.is_eligible else 'Not Eligible'}"
+
+
+
+
+
+
+class VotingStatus(models.Model):
+    """
+    Tracks whether an entity's ballot has actually been allotted/issued —
+    a simple derived flag, automatically flipped from No -> Yes the
+    moment a CustomerCodeAllotment is created for that customer_code.
+    Not manually editable by anyone (including SuperAdmin); it exists so
+    reports and the frontend have a single, explicit source of truth for
+    "has this entity's voting/ballot process been completed" without
+    everyone re-deriving it from CustomerCodeAllotment each time.
+    """
+
+    customer_code = models.CharField(max_length=50, unique=True)
+    voting_done = models.BooleanField(default=False)
+    marked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["customer_code"])]
+
+    def __str__(self):
+        return f"{self.customer_code}: {'Voted' if self.voting_done else 'Not Voted'}"

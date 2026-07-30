@@ -21,8 +21,9 @@ from .serializers import (
     AssignAllocationSerializer, AuthRepChangeSerializer, BallotPoolSerializer,
     CounterBallotAllocationSerializer, CustomerCodeAllotmentSerializer,
     ElectoralRollSerializer, SetPoolTotalSerializer,
-    SetVotingEligibilitySerializer, VotingEligibilitySerializer,
+    SetVotingEligibilitySerializer, VotingEligibilitySerializer,AdjustAllocationSerializer,AdjustPoolTotalSerializer
 )
+from .exceptions import ExceedsPoolTotal
 
 CounterStaff = get_user_model()
 _tag = swagger_auto_schema(tags=["Ballots"])
@@ -269,3 +270,41 @@ class SetVotingEligibilityView(APIView):
             actor=request.user,
         )
         return Response(VotingEligibilitySerializer(obj).data, status=status.HTTP_200_OK)
+
+
+class AdjustPoolTotalView(APIView):
+    """POST /api/ballots/pools/adjust/ — Super Admin only. delta can be +ve or -ve."""
+    permission_classes = [IsSuperAdmin]
+
+    @_tag
+    def post(self, request):
+        serializer = AdjustPoolTotalSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            pool = services.adjust_pool_total(data["roll_type"], data["delta"], actor=request.user)
+        except ExceedsPoolTotal as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(BallotPoolSerializer(pool).data)
+
+
+class AdjustAllocationView(APIView):
+    """POST /api/ballots/allocations/adjust/ — Super Admin only. delta can be +ve or -ve."""
+    permission_classes = [IsSuperAdmin]
+
+    @_tag
+    def post(self, request):
+        serializer = AdjustAllocationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        pool = BallotPool.objects.filter(roll_type=data["roll_type"]).first()
+        if pool is None:
+            return Response({"detail": f"No base pool exists for '{data['roll_type']}' yet."}, status=status.HTTP_404_NOT_FOUND)
+        counter = CounterStaff.objects.filter(pk=data["counter"], role=CounterStaff.Role.SUPERVISOR).first()
+        if counter is None:
+            return Response({"detail": "That Counter login could not be found."}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            allocation = services.adjust_counter_allocation(pool, counter, data["delta"], actor=request.user)
+        except ExceedsPoolTotal  as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(CounterBallotAllocationSerializer(allocation).data)        

@@ -870,6 +870,12 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
           <span className={`rounded px-2 py-0.5 font-mono text-xs font-bold ${locked ? "bg-rose-100 text-rose-800" : blocked ? "bg-slate-200 text-slate-500" : "bg-emerald-100 text-emerald-800"}`}>
             {locked ? "ALLOTTED" : blocked ? "BLOCKED" : "OPEN"}
           </span>
+          <span className={`rounded px-2 py-0.5 font-mono text-xs font-bold ${locked ? "bg-rose-100 text-rose-800" : blocked ? "bg-slate-200 text-slate-500" : "bg-emerald-100 text-emerald-800"}`}>
+            {locked ? "ALLOTTED" : blocked ? "BLOCKED" : "OPEN"}
+          </span>
+          <span className={`rounded px-2 py-0.5 font-mono text-[10px] font-bold ${code.voting_done ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-500"}`}>
+            Voting: {code.voting_done ? "Yes" : "No"}
+          </span>
         </div>
         {code.roll_type && (
           <span className={`rounded-lg border px-3 py-1 text-xs font-bold uppercase tracking-wide shadow-2xs ${code.roll_type === "category" ? "border-purple-200 bg-purple-100 text-purple-800" : "border-amber-200 bg-amber-100 text-amber-800"

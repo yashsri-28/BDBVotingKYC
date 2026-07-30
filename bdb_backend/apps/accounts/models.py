@@ -34,6 +34,15 @@ class CounterStaff(AbstractUser):
     # Single-active-session enforcement (session_limiter)
     active_session_key = models.CharField(max_length=100, blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        # Whoever is given role=admin automatically gets full Django-level
+        # rights too (is_staff, is_superuser) -- kept here (not in the view)
+        # so it can never be forgotten no matter how the row gets created.
+        if self.role == self.Role.ADMIN:
+            self.is_staff = True
+            self.is_superuser = True
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.get_full_name() or self.username} ({self.get_role_display()})"
 

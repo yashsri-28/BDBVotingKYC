@@ -9,9 +9,6 @@ from .models import BallotPool, CounterBallotAllocation
 from .exceptions import ExceedsPoolTotal
 from apps.audit.models import AuditLog
 
-
-
-
 from django.core.exceptions import ValidationError
 from .models import VotingEligibility
 
@@ -116,3 +113,82 @@ def set_voting_eligibility(customer_code, is_eligible, remark, actor):
         details={"customer_code": customer_code, "is_eligible": is_eligible, "remark": remark},
     )
     return obj
+
+
+@transaction.atomic
+def adjust_pool_total(roll_type, delta, actor):
+    """
+    Adds (positive delta) or subtracts (negative delta) ballots from a
+    base pool's total. Super Admin only — enforced at the view layer.
+    Cannot subtract below what's already allocated to counters.
+    """
+    # pool = BallotPool.objects.select_for_update().filter(roll_type=roll_type).first()
+    pool = BallotPool.objects.filter(roll_type=roll_type).first()
+
+    if pool is None:
+        if delta < 0:
+            raise ExceedsPoolTotal("Cannot subtract from a pool that doesn't exist yet.")
+        pool = BallotPool.objects.create(roll_type=roll_type, total_ballots=delta, created_by=actor)
+        AuditLog.record(
+            actor=actor, action="ballot_pool_adjusted",
+            details={"roll_type": roll_type, "delta": delta, "new_total": pool.total_ballots},
+        )
+        return pool
+
+    new_total = pool.total_ballots + delta
+    if new_total < 0:
+        raise ExceedsPoolTotal(f"Cannot subtract {abs(delta)} — pool only has {pool.total_ballots} total.")
+
+    already_allocated = pool.allocated_total
+    if new_total < already_allocated:
+        raise ExceedsPoolTotal(
+            f"Cannot reduce total below {already_allocated}, which is already allocated to counters."
+        )
+
+    pool.total_ballots = new_total
+    pool.save(update_fields=["total_ballots"])
+    AuditLog.record(
+        actor=actor, action="ballot_pool_adjusted",
+        details={"roll_type": roll_type, "delta": delta, "new_total": new_total},
+    )
+    return pool
+
+
+@transaction.atomic
+def adjust_counter_allocation(pool, counter, delta, actor):
+    """
+    Adds or subtracts ballots from a single Counter's allocation.
+    Cannot subtract below what the Counter has already distributed to
+    members, and cannot add beyond what's unallocated in the base pool.
+    """
+    allocation = CounterBallotAllocation.objects.select_for_update().filter(pool=pool, counter=counter).first()
+
+    if allocation is None:
+        if delta < 0:
+            raise ExceedsPoolTotal("Cannot subtract — this counter has no allocation yet.")
+        allocation = CounterBallotAllocation.objects.create(
+            pool=pool, counter=counter, assigned_count=0, assigned_by=actor
+        )
+
+    new_assigned = allocation.assigned_count + delta
+    if new_assigned < 0:
+        raise ExceedsPoolTotal(f"Cannot subtract {abs(delta)} — counter only has {allocation.assigned_count} assigned.")
+    if new_assigned < allocation.used_count:
+        raise ExceedsPoolTotal(
+            f"Cannot reduce below {allocation.used_count}, already distributed to members."
+        )
+
+    if delta > 0:
+        other_total = pool.allocations.exclude(pk=allocation.pk).aggregate(total=Sum("assigned_count"))["total"] or 0
+        if other_total + new_assigned > pool.total_ballots:
+            raise ExceedsPoolTotal("Not enough unallocated ballots left in the base pool for this increase.")
+
+    allocation.assigned_count = new_assigned
+    allocation.assigned_by = actor
+    allocation.save(update_fields=["assigned_count", "assigned_by"])
+
+    AuditLog.record(
+        actor=actor, action="ballot_allocation_adjusted",
+        details={"counter": counter.username, "roll_type": pool.roll_type, "delta": delta, "new_assigned_count": new_assigned},
+    )
+    return allocation

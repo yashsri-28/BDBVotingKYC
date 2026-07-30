@@ -71,29 +71,47 @@ def _generate_temp_password(length=12):
     return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
+# class CreateLoginSerializer(serializers.ModelSerializer):
+#     """
+#     Super Admin creates a Counter or Counting login. Password is always
+#     generated server-side and returned once in the response -- there is
+#     no self-signup and no email flow (confirmed 2026-07-28).
+#     """
+
+#     class Meta:
+#         model = CounterStaff
+#         fields = ["id", "username", "first_name", "last_name", "role"]
+
+#     def validate_role(self, value):
+#         if value not in (CounterStaff.Role.SUPERVISOR, CounterStaff.Role.COUNTING):
+#             raise serializers.ValidationError("Only Counter or Counting logins can be created here.")
+#         return value
+
+#     def create(self, validated_data):
+#         temp_password = _generate_temp_password()
+#         user = CounterStaff.objects.create_user(password=temp_password, **validated_data)
+#         user._temp_password = temp_password  # surfaced once by the view, never stored in plain text
+#         return user
+
+
 class CreateLoginSerializer(serializers.ModelSerializer):
     """
-    Super Admin creates a Counter or Counting login. Password is always
-    generated server-side and returned once in the response -- there is
-    no self-signup and no email flow (confirmed 2026-07-28).
+    Super Admin creates a Counter, Counting, or another Super Admin
+    login. Password is always generated server-side and returned once
+    in the response -- there is no self-signup and no email flow
+    (confirmed 2026-07-28, admin-creation added 2026-07-30).
     """
 
     class Meta:
         model = CounterStaff
         fields = ["id", "username", "first_name", "last_name", "role"]
 
-    def validate_role(self, value):
-        if value not in (CounterStaff.Role.SUPERVISOR, CounterStaff.Role.COUNTING):
-            raise serializers.ValidationError("Only Counter or Counting logins can be created here.")
-        return value
-
     def create(self, validated_data):
         temp_password = _generate_temp_password()
         user = CounterStaff.objects.create_user(password=temp_password, **validated_data)
         user._temp_password = temp_password  # surfaced once by the view, never stored in plain text
         return user
-
-
+        
 class ResetPasswordResponseSerializer(serializers.Serializer):
     username = serializers.CharField()
     new_password = serializers.CharField()

@@ -5,7 +5,7 @@ from .views import (
     AllotCodesView, AllotmentSearchView, AssignAllocationView, AuthRepChangeHistoryViewSet,
     AuthRepChangeView, BallotPoolViewSet, CounterBallotAllocationViewSet, CounterOwnSummaryView,
     CustomerCodeAllotmentViewSet, DashboardSummaryView, ElectoralRollViewSet, SetPoolTotalView,
-    SetVotingEligibilityView,
+    SetVotingEligibilityView,AdjustPoolTotalView,AdjustAllocationView
 )
 router = DefaultRouter()
 router.register("ballots/electoral-roll", ElectoralRollViewSet, basename="electoral-roll")
@@ -23,4 +23,6 @@ urlpatterns = [
     path("ballots/allotment/allot/", AllotCodesView.as_view(), name="allotment-allot"),
     path("ballots/auth-rep-change/", AuthRepChangeView.as_view(), name="auth-rep-change"),
     path("ballots/voting-eligibility/set/", SetVotingEligibilityView.as_view(), name="voting-eligibility-set"),
+    path("ballots/pools/adjust/", AdjustPoolTotalView.as_view(), name="ballot-pool-adjust"),
+    path("ballots/allocations/adjust/", AdjustAllocationView.as_view(), name="ballot-allocation-adjust"),
 ] + router.urls
