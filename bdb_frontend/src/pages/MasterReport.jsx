@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import * as XLSX from "xlsx";
 import { fetchAllotments } from "../api/ballots";
 import { getErrorMessage } from "../api/client";
 import { useAuth } from "../context/AuthContext";
@@ -9,6 +10,7 @@ export default function MasterReport() {
   const { showToast } = useToast();
   const [rows, setRows] = useState([]);
   const [rollType, setRollType] = useState("ALL");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -18,6 +20,7 @@ export default function MasterReport() {
     try {
       const filters = {};
       if (rollType !== "ALL") filters.roll_type = rollType;
+      if (search.trim()) filters.search = search.trim();
       const data = await fetchAllotments(filters);
       setRows(data);
     } catch (err) {
@@ -25,12 +28,36 @@ export default function MasterReport() {
     } finally {
       setLoading(false);
     }
-  }, [rollType]);
+  }, [rollType, search]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const timer = setTimeout(load, 300); // debounce search typing
+    return () => clearTimeout(timer);
+  }, [load]);
 
   function handleExport() {
-    showToast("success", "Export generated", "Exported Master Transaction dataset to Excel format successfully.");
+    if (rows.length === 0) {
+      showToast("warning", "Nothing to export", "There are no allotment records to export yet.");
+      return;
+    }
+    const exportRows = rows.map((row) => ({
+      "Access Card": row.access_card_number,
+      "Customer Code": row.customer_code,
+      "Entity Name": row.entity_name,
+      "Pool": row.roll_type,
+      "Ballots": row.ballots_allotted,
+      "Membership Status": row.membership_status_at_allotment || "—",
+      "Payment Status": row.fee_status_at_allotment || "—",
+      "Eligibility Source": row.voting_eligibility_source || "—",
+      "Eligibility Remark": row.eligibility_remark_at_allotment || "—",
+      "Allotted By": row.allotted_by_username || "—",
+      "Timestamp": new Date(row.allotted_at).toLocaleString(),
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Master Allotment Report");
+    XLSX.writeFile(workbook, `master_allotment_report_${Date.now()}.xlsx`);
+    showToast("success", "Export generated", "Master Transaction dataset exported to Excel successfully.");
   }
 
   return (
@@ -62,6 +89,16 @@ export default function MasterReport() {
               <option value="exclusive">Exclusive Pool</option>
             </select>
           </div>
+          <div className="sm:col-span-3">
+            <label className="mb-1 block font-bold text-slate-700">Search</label>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by Customer Code, Entity Name, or Access Card"
+              className="w-full rounded-lg border border-slate-300 bg-white p-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
         {error && <p className="text-xs text-rose-600">{error}</p>}
@@ -75,13 +112,17 @@ export default function MasterReport() {
                 <th className="p-3">Entity Name</th>
                 <th className="p-3">Pool</th>
                 <th className="p-3">Ballots</th>
+                <th className="p-3">Membership</th>
+                <th className="p-3">Payment</th>
+                <th className="p-3">Eligibility Source</th>
+                <th className="p-3">Remark</th>
                 <th className="p-3">Allotted By</th>
                 <th className="p-3">Timestamp</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {loading && <tr><td colSpan={7} className="p-6 text-center text-slate-400">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-slate-400">No allotments recorded yet.</td></tr>}
+              {loading && <tr><td colSpan={11} className="p-6 text-center text-slate-400">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={11} className="p-6 text-center text-slate-400">No allotments recorded yet.</td></tr>}
               {!loading && rows.map((row) => (
                 <tr key={row.id} className="transition-colors hover:bg-slate-50">
                   <td className="p-3 font-mono font-bold text-slate-900">{row.access_card_number}</td>
@@ -93,6 +134,24 @@ export default function MasterReport() {
                     </span>
                   </td>
                   <td className="p-3 font-mono font-bold text-slate-900">{row.ballots_allotted}</td>
+                  <td className="p-3">
+                    <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.membership_status_at_allotment === "active" ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"}`}>
+                      {row.membership_status_at_allotment || "—"}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.fee_status_at_allotment === "paid" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
+                      {row.fee_status_at_allotment || "—"}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.voting_eligibility_source === "admin_override" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}`}>
+                      {row.voting_eligibility_source === "admin_override" ? "On-the-Spot" : "Payment + KYC"}
+                    </span>
+                  </td>
+                  <td className="p-3 max-w-[180px] truncate text-slate-600" title={row.eligibility_remark_at_allotment || ""}>
+                    {row.eligibility_remark_at_allotment || "—"}
+                  </td>
                   <td className="p-3 text-slate-700">{row.allotted_by_username || "—"}</td>
                   <td className="p-3 font-mono text-[11px] text-slate-500">{new Date(row.allotted_at).toLocaleString()}</td>
                 </tr>

@@ -901,13 +901,16 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
             <span>{(code.entity_name || "?").charAt(0)}</span>
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Access Card</div>
-          <div className="mt-0.5 inline-block rounded bg-slate-200/70 px-2 py-0.5 font-mono text-sm font-bold text-slate-900">
-            {code.access_card_number}
-          </div>
-          <div className="mt-1 text-base font-bold text-slate-800">{code.entity_name}</div>
-        </div>
+       <div className="min-w-0 flex-1">
+  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Access Card</div>
+  <div className="mt-0.5 inline-block rounded bg-slate-200/70 px-2 py-0.5 font-mono text-sm font-bold text-slate-900">
+    {code.access_card_number}
+  </div>
+  <div className="mt-1 text-base font-bold text-slate-800">{code.entity_name}</div>
+  <div className="mt-0.5 text-xs font-semibold text-slate-500">
+    Membership No: <span className="font-mono text-slate-700">{code.membership_number || "—"}</span>
+  </div>
+</div>
       </div>
 
       <div className="space-y-0.5 rounded-lg border border-purple-100 bg-purple-50/60 p-2">

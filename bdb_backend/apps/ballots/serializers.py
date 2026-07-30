@@ -104,6 +104,8 @@ class CustomerCodeAllotmentSerializer(serializers.ModelSerializer):
         fields = [
             "id", "access_card_number", "customer_code", "entity_name",
             "roll_type", "ballots_allotted", "allotted_by_username", "allotted_at",
+            "membership_status_at_allotment", "fee_status_at_allotment",
+            "voting_eligibility_source", "eligibility_remark_at_allotment",
         ]
 
 
