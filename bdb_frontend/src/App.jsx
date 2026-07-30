@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Layout from "./components/Layout";
+import CandidateMaster from "./pages/CandidateMaster";
 
 
 import SuperAdminActionsReport from "./pages/SuperAdminActionsReport";
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="/counting" element={protect(<VoteCounting />, ["counting", "admin"])} />
             <Route path="/results" element={protect(<LiveResults />, undefined)} />
             <Route path="/superadmin-actions" element={protect(<SuperAdminActionsReport />, ["admin"])} />
+            <Route path="/candidate-master" element={protect(<CandidateMaster />, ["admin"])} />
 
             <Route path="/" element={<HomeRedirect />} />
             <Route path="*" element={<HomeRedirect />} />

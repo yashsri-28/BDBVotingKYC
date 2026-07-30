@@ -48,3 +48,47 @@ export async function fetchDetailedReport(categoryId) {
   const { data } = await api.get(`/counting/categories/${categoryId}/report/detailed/`);
   return data;
 }
+
+
+// --- Candidate Master management (Super Admin, CandidateMaster.jsx) ---
+
+export async function createCategory({ name, kind, electionYear, sequence }) {
+  const { data } = await api.post("/counting/categories/", {
+    name, kind, election_year: electionYear, sequence,
+  });
+  return data;
+}
+
+export async function updateCategory(categoryId, { name, kind, sequence }) {
+  const { data } = await api.patch(`/counting/categories/${categoryId}/`, {
+    name, kind, sequence,
+  });
+  return data;
+}
+
+export async function deleteCategory(categoryId) {
+  await api.delete(`/counting/categories/${categoryId}/`);
+}
+
+export async function fetchAllCandidates(categoryId) {
+  const { data } = await api.get("/counting/candidates/", { params: { category: categoryId } });
+  return data.results || data;
+}
+
+export async function createCandidate({ category, serialNo, candidateName, memberName }) {
+  const { data } = await api.post("/counting/candidates/", {
+    category, serial_no: serialNo, candidate_name: candidateName, member_name: memberName, is_active: true,
+  });
+  return data;
+}
+
+export async function updateCandidate(candidateId, { serialNo, candidateName, memberName, isActive }) {
+  const { data } = await api.patch(`/counting/candidates/${candidateId}/`, {
+    serial_no: serialNo, candidate_name: candidateName, member_name: memberName, is_active: isActive,
+  });
+  return data;
+}
+
+export async function deleteCandidate(candidateId) {
+  await api.delete(`/counting/candidates/${candidateId}/`);
+}

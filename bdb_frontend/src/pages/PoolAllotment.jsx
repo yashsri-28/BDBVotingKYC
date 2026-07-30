@@ -154,6 +154,7 @@
 //   );
 // }
 import { useState, useEffect, useCallback } from "react";
+import * as XLSX from "xlsx";
 import {
   fetchPools, setPoolTotal, fetchAllocations, assignAllocation,
   adjustPoolTotal, adjustAllocation,
@@ -282,7 +283,26 @@ export default function PoolAllotment() {
       setAdjusting(false);
     }
   }
-
+  // NEW: exports the Counter Allocation table below to a downloadable .xlsx file
+  function handleExportAllocationsExcel() {
+    if (allocations.length === 0) {
+      showToast("warning", "Nothing to export", "There are no allocations yet.");
+      return;
+    }
+    const rows = allocations.map((a) => ({
+      "Counter Name": a.counter_name,
+      "Pool": a.roll_type === "category" ? "Category" : "Exclusive",
+      "Assigned": a.assigned_count,
+      "Used": a.used_count,
+      "Remaining": a.remaining_count,
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Counter Allocations");
+    const today = new Date().toISOString().slice(0, 10); // e.g. 2026-07-30
+    XLSX.writeFile(workbook, `counter-allocations-${today}.xlsx`);
+  }
+  
   if (loading) return <div className="mx-auto max-w-4xl px-4 py-8 text-slate-400">Loading…</div>;
 
   return (
@@ -475,31 +495,44 @@ export default function PoolAllotment() {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <table className="w-full border-collapse text-left text-xs">
-          <thead>
-            <tr className="bg-slate-900 font-semibold text-white">
-              <th className="p-3">Counter</th>
-              <th className="p-3">Pool</th>
-              <th className="p-3 text-center">Assigned</th>
-              <th className="p-3 text-center">Used</th>
-              <th className="p-3 text-center">Remaining</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200">
-            {allocations.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-slate-400">No allocations yet.</td></tr>}
-            {allocations.map((a) => (
-              <tr key={a.id} className="hover:bg-slate-50">
-                <td className="p-3 font-bold text-slate-900">{a.counter_name}</td>
-                <td className="p-3"><span className={`rounded px-2 py-0.5 text-[10px] font-bold ${a.roll_type === "category" ? "bg-purple-100 text-purple-800" : "bg-amber-100 text-amber-800"}`}>{a.roll_type}</span></td>
-                <td className="p-3 text-center font-mono">{a.assigned_count}</td>
-                <td className="p-3 text-center font-mono text-emerald-700">{a.used_count}</td>
-                <td className="p-3 text-center font-mono text-amber-700">{a.remaining_count}</td>
+    <div className="rounded-xl border border-slate-200 bg-white">
+        <div className="flex items-center justify-between border-b border-slate-200 p-4">
+          <h3 className="text-sm font-bold text-slate-900">Counter Allocations</h3>
+          <button
+            type="button"
+            onClick={handleExportAllocationsExcel}
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
+          >
+            ⬇ Export Excel
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left text-xs">
+            <thead>
+              <tr className="bg-slate-900 font-semibold text-white">
+                <th className="p-3">Counter</th>
+                <th className="p-3">Pool</th>
+                <th className="p-3 text-center">Assigned</th>
+                <th className="p-3 text-center">Used</th>
+                <th className="p-3 text-center">Remaining</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {allocations.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-slate-400">No allocations yet.</td></tr>}
+              {allocations.map((a) => (
+                <tr key={a.id} className="hover:bg-slate-50">
+                  <td className="p-3 font-bold text-slate-900">{a.counter_name}</td>
+                  <td className="p-3"><span className={`rounded px-2 py-0.5 text-[10px] font-bold ${a.roll_type === "category" ? "bg-purple-100 text-purple-800" : "bg-amber-100 text-amber-800"}`}>{a.roll_type}</span></td>
+                  <td className="p-3 text-center font-mono">{a.assigned_count}</td>
+                  <td className="p-3 text-center font-mono text-emerald-700">{a.used_count}</td>
+                  <td className="p-3 text-center font-mono text-amber-700">{a.remaining_count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+
     </div>
   );
 }

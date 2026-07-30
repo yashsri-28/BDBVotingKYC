@@ -23,6 +23,7 @@ const NAV_ITEMS = [
   { path: "/eligibility", label: "Manage Eligibility", roles: ["admin"] },
   { path: "/audit", label: "Audit Trail Log", roles: ["admin"] },
   { path: "/superadmin-actions", label: "SuperAdmin Actions Report", roles: ["admin"] },
+  { path: "/candidate-master", label: "Candidate Master", roles: ["admin"] },
 ];
 
 export default function TopBar() {
