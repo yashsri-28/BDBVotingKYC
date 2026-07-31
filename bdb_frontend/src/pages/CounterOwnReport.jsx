@@ -28,7 +28,7 @@ export default function CounterOwnReport() {
   if (loading) return <div className="mx-auto max-w-3xl px-4 py-8 text-slate-400">Loading…</div>;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div>

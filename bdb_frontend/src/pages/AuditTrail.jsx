@@ -33,7 +33,7 @@ export default function AuditTrail() {
   useEffect(() => { load(); }, []);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div>
           <h2 className="flex items-center space-x-2 text-base font-bold text-slate-900">
@@ -59,7 +59,7 @@ export default function AuditTrail() {
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full border-collapse text-left text-xs">
             <thead>
-              <tr className="bg-slate-900 font-semibold text-white">
+              <tr className="bg-blue-900 font-semibold text-white">
                 <th className="p-3">Timestamp</th>
                 <th className="p-3">Actor</th>
                 <th className="p-3">Action</th>

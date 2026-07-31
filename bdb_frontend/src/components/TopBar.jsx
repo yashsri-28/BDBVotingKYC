@@ -52,18 +52,16 @@ export default function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-slate-800 bg-navy-900 text-white shadow-md">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+      <header className="sticky top-0 z-40 border-b border-slate-50 bg-slate-100 text-white shadow-md">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-18 items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl font-bold text-white shadow-md">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
+    <div className="mx-auto flex h-14 items-center justify-center mr-3">
+  <img src="./images/bdb-mainlogo.svg" alt="BDB" className="h-full w-full object-contain" />
+</div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-base font-bold tracking-tight text-white">BDB Voting &amp; KYC Portal</span>
+                  <span className="text-base font-bold tracking-tight text-slate-700">BDB Voting &amp; KYC Portal</span>
                   <span className="rounded border border-blue-700/50 bg-blue-900/80 px-2 py-0.5 text-[10px] font-bold text-blue-300">v2.5</span>
                 </div>
                 <p className="text-[11px] text-slate-400">Elections Management, KYC Verification &amp; Ballot Allotment</p>
@@ -71,9 +69,9 @@ export default function TopBar() {
             </div>
 
             <div className="hidden items-center space-x-4 lg:flex">
-              <div className="flex items-center rounded-lg border border-slate-700 bg-slate-800 p-1">
-                <span className="flex items-center space-x-1 px-2 text-xs font-medium text-slate-400">
-                  <svg className="h-3.5 w-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <div className="flex items-center rounded-lg border border-blue-600 bg-blue-700 p-1">
+                <span className="flex items-center space-x-1 px-2 text-xs font-medium text-blue-50">
+                  <svg className="h-3.5 w-3.5 text-blue-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span>FY:</span>
@@ -81,7 +79,7 @@ export default function TopBar() {
                 <select
                   value={year}
                   onChange={handleYearChange}
-                  className="rounded border border-slate-700 bg-navy-950 px-2.5 py-1 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="rounded border border-blue-700 bg-blue-800 px-2.5 py-1 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   {FY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
@@ -90,18 +88,18 @@ export default function TopBar() {
 
             <div className="flex items-center space-x-3">
               <div className="hidden text-right sm:block">
-                <div className="text-xs font-bold text-slate-200">{user?.full_name || user?.username}</div>
-                <div className="flex items-center justify-end space-x-1 text-[10px] text-emerald-400">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                <div className="text-xs font-bold text-slate-700">{user?.full_name || user?.username}</div>
+                <div className="flex items-center justify-end space-x-1 text-[10px] font-semibold text-blue-800">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-900" />
                   <span>{ROLE_LABELS[user?.role] || user?.role}</span>
                 </div>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-sm font-bold text-slate-300">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-700 text-sm font-bold text-blue-50">
                 {ROLE_INITIALS[user?.role] || "U"}
               </div>
               <button
                 onClick={handleSignOut}
-                className="ml-2 flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-300 transition-all hover:bg-rose-900/80 hover:text-rose-200"
+                className="ml-2 flex items-center space-x-1.5 rounded-lg border border-blue-600 bg-blue-700 px-3 py-1.5 text-xs font-bold text-blue-50 transition-all hover:bg-rose-900/80 hover:text-rose-200"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -120,8 +118,10 @@ export default function TopBar() {
       </header>
 
       <nav className="sticky top-16 z-30 border-b border-slate-200 bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="custom-scrollbar flex space-x-1 overflow-x-auto py-2 sm:space-x-3">
+        {/* <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"> */}
+
+<div className="mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="custom-scrollbar flex space-x-1 overflow-x-auto py-2 sm:space-x-3">
             {visibleItems.map((item) => (
               <button
                 key={item.path}

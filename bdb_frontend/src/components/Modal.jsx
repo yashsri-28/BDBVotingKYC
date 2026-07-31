@@ -2,11 +2,11 @@ export default function Modal({ open, onClose, title, icon, children, maxWidth =
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-blue-900/60 p-4 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className={`w-full ${maxWidth} overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl`}>
-        <div className="flex items-center justify-between bg-slate-900 px-5 py-4 text-white">
+        <div className="flex items-center justify-between bg-blue-900 px-5 py-4 text-white">
           <h3 className="flex items-center space-x-2 text-sm font-bold">
             {icon}
             <span>{title}</span>

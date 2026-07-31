@@ -484,7 +484,7 @@ export default function VoteCounting() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-bold text-slate-900">Vote Counting</h1>
@@ -498,8 +498,8 @@ export default function VoteCounting() {
 
       {/* Category strip */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-800 bg-slate-900 px-5 py-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Election Categories</h3>
+        <div className="border-b border-slate-800 bg-blue-900 px-5 py-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-white">Election Categories</h3>
         </div>
         <div className="flex flex-wrap gap-3 p-5">
           {categories.map((cat) => {
@@ -565,7 +565,7 @@ export default function VoteCounting() {
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
           {/* Entry panel */}
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-800 bg-slate-900 p-4 text-white sm:p-5">
+            <div className="border-b border-slate-800 bg-blue-900 p-4 text-white sm:p-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold">{activeCategory.name}</h2>
                 <span className="rounded-lg border border-blue-700/50 bg-blue-900/80 px-3 py-1 text-xs font-bold text-blue-300">
@@ -671,8 +671,8 @@ export default function VoteCounting() {
           <div className="space-y-4">
             {totals && (
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-800 bg-slate-900 px-4 py-3">
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Running Total</h3>
+                <div className="border-b border-slate-800 bg-blue-900 px-4 py-3">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-white">Running Total</h3>
                 </div>
                 <div className="space-y-3 p-4">
                   <div className="flex items-center justify-between rounded-lg border border-blue-100 bg-blue-50/60 p-3">
@@ -688,8 +688,8 @@ export default function VoteCounting() {
             )}
 
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-800 bg-slate-900 px-4 py-3">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Recent Ballots</h3>
+              <div className="border-b border-slate-800 bg-blue-900 px-4 py-3">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-white">Recent Ballots</h3>
               </div>
               <div className="p-4">
                 {recentBallots.length === 0 ? (

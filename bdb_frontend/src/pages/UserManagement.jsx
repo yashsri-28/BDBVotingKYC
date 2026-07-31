@@ -236,7 +236,7 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>
@@ -253,7 +253,7 @@ export default function UserManagement() {
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full border-collapse text-left text-xs">
             <thead>
-              <tr className="bg-slate-900 font-semibold text-white">
+              <tr className="bg-blue-900 font-semibold text-white">
                 <th className="p-3">Username</th>
                 <th className="p-3">Name</th>
                 <th className="p-3">Role</th>

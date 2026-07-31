@@ -152,7 +152,7 @@ export default function CandidateMaster() {
   if (loading) return <div className="mx-auto max-w-5xl px-4 py-8 text-slate-400">Loading…</div>;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-lg font-bold text-slate-900">Election Categories</h2>
         <p className="mb-4 text-xs text-slate-500">Create the categories to be counted, before setting up their candidates.</p>
@@ -183,12 +183,18 @@ export default function CandidateMaster() {
             onChange={(e) => setCategoryForm((f) => ({ ...f, sequence: Number(e.target.value) }))}
             className="rounded-lg border border-slate-300 p-2.5 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <button
+          {/* <button
             type="submit" disabled={saving}
             className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60 sm:col-span-5"
           >
             {saving ? "Adding…" : "Add Category"}
-          </button>
+          </button> */}
+          <button
+  type="submit" disabled={saving}
+  className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60 sm:col-span-1"
+>
+  {saving ? "Adding…" : "Add Category"}
+</button>
         </form>
 
         <div className="flex flex-wrap gap-2">
@@ -252,7 +258,7 @@ export default function CandidateMaster() {
           <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full border-collapse text-left text-xs">
               <thead>
-                <tr className="bg-slate-900 font-semibold text-white">
+                <tr className="bg-blue-900 font-semibold text-white">
                   <th className="p-3">Serial</th>
                   <th className="p-3">Candidate</th>
                   <th className="p-3">Membership No.</th>

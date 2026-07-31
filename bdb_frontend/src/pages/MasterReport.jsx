@@ -61,7 +61,7 @@ export default function MasterReport() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col justify-between gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center">
           <div>
@@ -89,7 +89,7 @@ export default function MasterReport() {
               <option value="exclusive">Exclusive Pool</option>
             </select>
           </div>
-          <div className="sm:col-span-3">
+          <div className="sm:col-span-1">
             <label className="mb-1 block font-bold text-slate-700">Search</label>
             <input
               type="text"
@@ -106,7 +106,7 @@ export default function MasterReport() {
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full border-collapse text-left text-xs">
             <thead>
-              <tr className="bg-slate-900 font-semibold text-white">
+              <tr className="bg-blue-900 font-semibold text-white">
                 <th className="p-3">Access Card</th>
                 <th className="p-3">Customer Code</th>
                 <th className="p-3">Entity Name</th>

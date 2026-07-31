@@ -602,7 +602,7 @@ async function runSearch(card) {
   const exclusiveCount = selectedCodesList.filter((c) => c.roll_type === "exclusive").length;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       {/* Search bar */}
    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -661,7 +661,7 @@ async function runSearch(card) {
 
           {/* Ballot allotment box */}
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-800 bg-slate-900 p-4 text-white sm:p-5">
+            <div className="border-b border-slate-800 bg-blue-900 p-4 text-white sm:p-5">
               <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
                 <div>
                   <h3 className="flex items-center space-x-2 text-sm font-bold">

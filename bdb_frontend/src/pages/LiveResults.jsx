@@ -65,7 +65,7 @@ export default function LiveResults() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
@@ -91,8 +91,8 @@ export default function LiveResults() {
 
       {/* Category chips */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-800 bg-slate-900 px-5 py-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Election Categories</h3>
+        <div className="border-b border-slate-800 bg-blue-900 px-5 py-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-white">Election Categories</h3>
         </div>
         <div className="flex flex-wrap justify-center gap-2 p-5">
           {categories.map((cat) => (
@@ -146,8 +146,8 @@ export default function LiveResults() {
 function ResultsTable({ title, rows, totalVotes, totalBallots, highlightTop = false }) {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-800 bg-slate-900 px-5 py-3">
-        <h3 className="text-center text-xs font-bold uppercase tracking-wider text-slate-300">{title}</h3>
+      <div className="border-b border-slate-800 bg-blue-900 px-5 py-3">
+        <h3 className="text-center text-xs font-bold uppercase tracking-wider text-white">{title}</h3>
       </div>
       <table className="w-full border-collapse text-left text-xs">
         <thead>
