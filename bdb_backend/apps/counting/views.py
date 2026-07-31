@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import IsCountingUser, IsSuperAdmin
+from django.db.models import ProtectedError
 
 from . import services
 from .models import Ballot, Candidate, ElectionCategory
@@ -45,6 +46,15 @@ class ElectionCategoryViewSet(viewsets.ModelViewSet):
         year = self.request.query_params.get("election_year")
         return qs.filter(election_year=year) if year else qs
 
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except ProtectedError:
+            return Response(
+                {"detail": "This category already has candidates or counted ballots and cannot be deleted. Consider leaving it inactive instead."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
 
 @_tagged("list", "retrieve", "create", "update", "partial_update", "destroy")
 class CandidateViewSet(viewsets.ModelViewSet):
@@ -61,6 +71,14 @@ class CandidateViewSet(viewsets.ModelViewSet):
         qs = super().get_queryset()
         category_id = self.request.query_params.get("category")
         return qs.filter(category_id=category_id) if category_id else qs
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except ProtectedError:
+            return Response(
+                {"detail": "This candidate already has votes counted against them and cannot be deleted. Mark them Inactive instead."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class StartCountingView(APIView):

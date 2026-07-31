@@ -178,9 +178,12 @@ def detailed_ballot_list(category):
     against each candidate that ballot voted for -- matching the layout
     in Voting_Report.xlsx.
     """
-    serials = list(
-        Candidate.objects.filter(category=category).order_by("serial_no").values_list("serial_no", flat=True)
+    candidates = list(
+        Candidate.objects.filter(category=category).order_by("serial_no")
     )
+    serials = [c.serial_no for c in candidates]
+    candidate_labels = {c.serial_no: c.candidate_name for c in candidates}
+
     ballots = category.ballots.prefetch_related("votes__candidate").order_by("ballot_no")
 
     rows = []
@@ -192,4 +195,9 @@ def detailed_ballot_list(category):
             "marks": {serial: (serial in voted_for) for serial in serials},
         })
 
-    return {"candidate_serials": serials, "rows": rows, "total_ballots": len(rows)}
+    return {
+        "candidate_serials": serials,
+        "candidate_labels": candidate_labels,
+        "rows": rows,
+        "total_ballots": len(rows),
+    }

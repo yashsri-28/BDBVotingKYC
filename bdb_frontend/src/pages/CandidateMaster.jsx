@@ -20,7 +20,8 @@ export default function CandidateMaster() {
   const [saving, setSaving] = useState(false);
 
   const [categoryForm, setCategoryForm] = useState({ name: "", kind: "category", electionYear: "2026-27", sequence: 1 });
-  const [candidateForm, setCandidateForm] = useState({ serialNo: "", candidateName: "", memberName: "" });
+  // const [candidateForm, setCandidateForm] = useState({ serialNo: "", candidateName: "", memberName: "" });
+  const [candidateForm, setCandidateForm] = useState({ serialNo: "", candidateName: "", memberName: "", membershipNo: "" });
 
   const loadCategories = useCallback(async () => {
     setLoading(true);
@@ -99,9 +100,10 @@ export default function CandidateMaster() {
         serialNo: Number(candidateForm.serialNo),
         candidateName: candidateForm.candidateName.trim(),
         memberName: candidateForm.memberName.trim(),
+        membershipNo: candidateForm.membershipNo.trim(),
       });
       showToast("success", "Candidate added", `${candidateForm.candidateName} has been added.`);
-      setCandidateForm({ serialNo: "", candidateName: "", memberName: "" });
+      setCandidateForm({ serialNo: "", candidateName: "", memberName: "", membershipNo: "" });
       await loadCandidates(selectedCategoryId);
     } catch (err) {
       showToast("danger", "Could not add candidate", getErrorMessage(err, "That serial number may already be used in this category."));
@@ -116,6 +118,7 @@ export default function CandidateMaster() {
         serialNo: candidate.serial_no,
         candidateName: candidate.candidate_name,
         memberName: candidate.member_name,
+        membershipNo: candidate.membership_no,
         isActive: !candidate.is_active,
       });
       await loadCandidates(selectedCategoryId);
@@ -131,7 +134,16 @@ export default function CandidateMaster() {
       showToast("success", "Candidate removed", `${candidate.candidate_name} has been removed.`);
       await loadCandidates(selectedCategoryId);
     } catch (err) {
-      showToast("danger", "Could not remove candidate", getErrorMessage(err));
+      const status = err?.response?.status;
+      if (status === 500 || err?.response?.data?.detail?.includes?.("Protected")) {
+        showToast(
+          "danger",
+          "Cannot delete this candidate",
+          `${candidate.candidate_name} already has votes counted against them. Mark them Inactive instead of deleting.`
+        );
+      } else {
+        showToast("danger", "Could not remove candidate", getErrorMessage(err));
+      }
     }
   }
 
@@ -204,7 +216,7 @@ export default function CandidateMaster() {
             {selectedCategory.votes_per_ballot} vote(s) per ballot for this category. Serial numbers must be unique within it.
           </p>
 
-          <form onSubmit={handleCreateCandidate} className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-4">
+         <form onSubmit={handleCreateCandidate} className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-5">
             <input
               type="number" min="1" placeholder="Serial No."
               value={candidateForm.serialNo}
@@ -216,6 +228,12 @@ export default function CandidateMaster() {
               value={candidateForm.candidateName}
               onChange={(e) => setCandidateForm((f) => ({ ...f, candidateName: e.target.value }))}
               className="rounded-lg border border-slate-300 p-2.5 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+            <input
+              type="text" placeholder="Membership No. (e.g. M002)"
+              value={candidateForm.membershipNo}
+              onChange={(e) => setCandidateForm((f) => ({ ...f, membershipNo: e.target.value }))}
+              className="rounded-lg border border-slate-300 p-2.5 font-mono text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
             <input
               type="text" placeholder="Member / Firm Name (optional)"
@@ -237,6 +255,7 @@ export default function CandidateMaster() {
                 <tr className="bg-slate-900 font-semibold text-white">
                   <th className="p-3">Serial</th>
                   <th className="p-3">Candidate</th>
+                  <th className="p-3">Membership No.</th>
                   <th className="p-3">Member/Firm</th>
                   <th className="p-3 text-center">Active</th>
                   <th className="p-3 text-center">Actions</th>
@@ -244,12 +263,13 @@ export default function CandidateMaster() {
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {candidates.length === 0 && (
-                  <tr><td colSpan={5} className="p-4 text-center text-slate-400">No candidates yet.</td></tr>
+                  <tr><td colSpan={6} className="p-4 text-center text-slate-400">No candidates yet.</td></tr>
                 )}
                 {candidates.map((c) => (
                   <tr key={c.id} className="hover:bg-slate-50">
                     <td className="p-3 font-mono font-bold">{c.serial_no}</td>
                     <td className="p-3 font-semibold text-slate-900">{c.candidate_name}</td>
+                    <td className="p-3 font-mono text-slate-600">{c.membership_no || "—"}</td>
                     <td className="p-3 text-slate-600">{c.member_name || "—"}</td>
                     <td className="p-3 text-center">
                       <button

@@ -87,6 +87,7 @@ class Candidate(models.Model):
     candidate_name = models.CharField(max_length=255)
     member_name = models.CharField(max_length=255, blank=True)
     is_active = models.BooleanField(default=True)
+    membership_no = models.CharField(max_length=50, blank=True)
 
     class Meta:
         ordering = ["category", "serial_no"]

@@ -1,15 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
+import * as XLSX from "xlsx";
 import { fetchCategories, fetchLiveTotals } from "../api/counting";
 import { getErrorMessage } from "../api/client";
+import { useToast } from "../context/ToastContext";
 import Alert from "../components/Alert";
 
 const REFRESH_MS = 5000;
 
-/**
- * The member-facing results display. Polls the live totals so the board
- * updates itself as the counting user enters ballots.
- */
 export default function LiveResults() {
+  const { showToast } = useToast();
   const [categories, setCategories] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [totals, setTotals] = useState(null);
@@ -46,32 +45,70 @@ export default function LiveResults() {
 
   const selected = categories.find((c) => c.id === selectedId);
 
+  function handleExport() {
+    if (!totals || totals.by_serial.length === 0) {
+      showToast("warning", "Nothing to export", "There are no results to export yet.");
+      return;
+    }
+    const exportRows = totals.by_leading.map((r, i) => ({
+      "Rank": i + 1,
+      "Sr. No.": r.serial_no,
+      "Candidate": r.candidate_name,
+      "Member/Firm": r.member_name || "",
+      "Votes": r.votes,
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, totals.category.substring(0, 30));
+    XLSX.writeFile(workbook, `live_results_${totals.category.replace(/\s+/g, "_")}_${Date.now()}.xlsx`);
+    showToast("success", "Export generated", "Live results exported to Excel successfully.");
+  }
+
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
-      <header className="mb-6 text-center">
-        <img src="/images/bdb-logo.png" alt="Bharat Diamond Bourse" className="mx-auto mb-3 h-14 w-auto" />
-        <h1 className="brand-serif text-2xl font-semibold uppercase tracking-wide text-navy-950">
-          Election of Managing Committee
-        </h1>
-        {totals && <p className="mt-1 text-lg text-navy-800">{totals.category} · {totals.election_year}</p>}
-      </header>
-
-      {error && <div className="mb-4"><Alert type="error">{error}</Alert></div>}
-
-      <div className="mb-6 flex flex-wrap justify-center gap-2">
-        {categories.map((cat) => (
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
+          <div className="flex flex-1 flex-col items-center sm:flex-row sm:items-center sm:gap-4">
+            <img src="/images/bdb-logo.png" alt="Bharat Diamond Bourse" className="h-14 w-auto" />
+            <div>
+              <h1 className="text-xl font-bold uppercase tracking-wide text-slate-900">Election of Managing Committee</h1>
+              {totals && (
+                <p className="mt-1 text-sm font-semibold text-slate-500">{totals.category} · {totals.election_year}</p>
+              )}
+            </div>
+          </div>
           <button
-            key={cat.id}
-            onClick={() => setSelectedId(cat.id)}
-            className={`tap-target rounded-lg border px-4 py-2 text-sm font-medium transition ${
-              selectedId === cat.id
-                ? "border-navy-900 bg-navy-900 text-white"
-                : "border-steel-200 bg-white text-navy-800 hover:bg-ice-50"
-            }`}
+            onClick={handleExport}
+            className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-800"
           >
-            {cat.name}
+            <span>Export Results Excel</span>
           </button>
-        ))}
+        </div>
+      </div>
+
+      {error && <Alert type="error">{error}</Alert>}
+
+      {/* Category chips */}
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-800 bg-slate-900 px-5 py-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Election Categories</h3>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2 p-5">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedId(cat.id)}
+              className={`rounded-lg border px-4 py-2 text-xs font-bold transition-all ${
+                selectedId === cat.id
+                  ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
       </div>
 
       {totals && (
@@ -91,10 +128,15 @@ export default function LiveResults() {
             />
           </div>
 
-          <p className="mt-6 text-center text-sm text-steel-400" aria-live="polite">
-            {selected?.status === "in_progress" ? "Counting in progress · " : ""}
-            Updated {lastUpdated ? lastUpdated.toLocaleTimeString() : "—"}
-          </p>
+          <div className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-semibold text-slate-500 shadow-sm" aria-live="polite">
+            {selected?.status === "in_progress" && (
+              <span className="flex items-center gap-1.5 text-blue-700">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-blue-600" />
+                Counting in progress
+              </span>
+            )}
+            <span>· Updated {lastUpdated ? lastUpdated.toLocaleTimeString() : "—"}</span>
+          </div>
         </>
       )}
     </div>
@@ -103,40 +145,48 @@ export default function LiveResults() {
 
 function ResultsTable({ title, rows, totalVotes, totalBallots, highlightTop = false }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-steel-200 bg-white">
-      <h2 className="border-b border-steel-200 bg-ice-100 px-4 py-3 text-center text-sm font-semibold uppercase tracking-wide text-navy-900">
-        {title}
-      </h2>
-      <table className="w-full text-sm">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-800 bg-slate-900 px-5 py-3">
+        <h3 className="text-center text-xs font-bold uppercase tracking-wider text-slate-300">{title}</h3>
+      </div>
+      <table className="w-full border-collapse text-left text-xs">
         <thead>
-          <tr className="border-b border-steel-200 text-left text-xs uppercase tracking-wide text-steel-400">
-            <th className="px-4 py-2 font-medium">Sr. No.</th>
-            <th className="px-4 py-2 font-medium">Candidate</th>
-            <th className="px-4 py-2 text-right font-medium">Votes</th>
+          <tr className="bg-slate-100 font-bold text-slate-700">
+            <th className="p-3">Sr. No.</th>
+            <th className="p-3">Candidate</th>
+            <th className="p-3 text-right">Votes</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-steel-200">
+        <tbody className="divide-y divide-slate-200">
           {rows.map((r, i) => (
-            <tr key={r.serial_no} className={highlightTop && i < 2 ? "bg-ice-100" : ""}>
-              <td className="px-4 py-2 font-mono text-navy-800">{r.serial_no}</td>
-              <td className="px-4 py-2 font-medium text-navy-950">{r.candidate_name}</td>
-              <td className="px-4 py-2 text-right font-mono font-semibold text-navy-950">{r.votes}</td>
+            <tr
+              key={r.serial_no}
+              className={highlightTop && i < 2 ? "bg-emerald-50" : "hover:bg-slate-50"}
+            >
+              <td className="p-3 font-mono text-slate-500">{r.serial_no}</td>
+              <td className="p-3 font-bold text-slate-900">{r.candidate_name}</td>
+              <td className={`p-3 text-right font-mono text-base font-black ${highlightTop && i < 2 ? "text-emerald-700" : "text-slate-800"}`}>
+                {r.votes}
+              </td>
             </tr>
           ))}
+          {rows.length === 0 && (
+            <tr><td colSpan={3} className="p-4 text-center text-slate-400">No candidates in this category.</td></tr>
+          )}
         </tbody>
-        <tfoot className="border-t-2 border-navy-900">
-          <tr className="bg-ice-50">
-            <td colSpan={2} className="px-4 py-2 font-semibold text-navy-900">Total Votes</td>
-            <td className="px-4 py-2 text-right font-mono font-semibold text-navy-950">{totalVotes}</td>
+        <tfoot>
+          <tr className="border-t-2 border-slate-900 bg-blue-50/60">
+            <td colSpan={2} className="p-3 text-xs font-bold text-blue-800">Total Votes</td>
+            <td className="p-3 text-right font-mono text-base font-black text-blue-800">{totalVotes}</td>
           </tr>
           {totalBallots !== undefined && (
-            <tr className="bg-verified-100">
-              <td colSpan={2} className="px-4 py-2 font-semibold text-verified-600">Total Ballots</td>
-              <td className="px-4 py-2 text-right font-mono font-semibold text-verified-600">{totalBallots}</td>
+            <tr className="bg-purple-50/60">
+              <td colSpan={2} className="p-3 text-xs font-bold text-purple-800">Total Ballots</td>
+              <td className="p-3 text-right font-mono text-base font-black text-purple-800">{totalBallots}</td>
             </tr>
           )}
         </tfoot>
       </table>
-    </section>
+    </div>
   );
 }

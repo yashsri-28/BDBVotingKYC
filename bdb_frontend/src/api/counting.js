@@ -75,16 +75,18 @@ export async function fetchAllCandidates(categoryId) {
   return data.results || data;
 }
 
-export async function createCandidate({ category, serialNo, candidateName, memberName }) {
+export async function createCandidate({ category, serialNo, candidateName, memberName, membershipNo }) {
   const { data } = await api.post("/counting/candidates/", {
-    category, serial_no: serialNo, candidate_name: candidateName, member_name: memberName, is_active: true,
+    category, serial_no: serialNo, candidate_name: candidateName,
+    member_name: memberName, membership_no: membershipNo, is_active: true,
   });
   return data;
 }
 
-export async function updateCandidate(candidateId, { serialNo, candidateName, memberName, isActive }) {
+export async function updateCandidate(candidateId, { serialNo, candidateName, memberName, membershipNo, isActive }) {
   const { data } = await api.patch(`/counting/candidates/${candidateId}/`, {
-    serial_no: serialNo, candidate_name: candidateName, member_name: memberName, is_active: isActive,
+    serial_no: serialNo, candidate_name: candidateName,
+    member_name: memberName, membership_no: membershipNo, is_active: isActive,
   });
   return data;
 }

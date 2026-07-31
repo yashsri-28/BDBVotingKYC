@@ -18,6 +18,7 @@ import UserManagement from "./pages/UserManagement";
 import PoolAllotment from "./pages/PoolAllotment";
 import VoteCounting from "./pages/VoteCounting";
 import LiveResults from "./pages/LiveResults";
+import CountingDetailedReport from "./pages/CountingDetailedReport";
 
 
 import ManageEligibility from "./pages/ManageEligibility";
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="/users" element={protect(<UserManagement />, ["admin"])} />
             <Route path="/pool-allotment" element={protect(<PoolAllotment />, ["admin"])} />
             <Route path="/eligibility" element={protect(<ManageEligibility />, ["admin"])} />
+            <Route path="/counting-detailed-report" element={protect(<CountingDetailedReport />, ["counting", "admin"])} />
             <Route path="/audit" element={protect(<AuditTrail />, ["admin"])} />
             <Route path="/counting" element={protect(<VoteCounting />, ["counting", "admin"])} />
             <Route path="/results" element={protect(<LiveResults />, undefined)} />

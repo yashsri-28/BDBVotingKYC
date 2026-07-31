@@ -24,6 +24,7 @@ const NAV_ITEMS = [
   { path: "/audit", label: "Audit Trail Log", roles: ["admin"] },
   { path: "/superadmin-actions", label: "SuperAdmin Actions Report", roles: ["admin"] },
   { path: "/candidate-master", label: "Candidate Master", roles: ["admin"] },
+  { path: "/counting-detailed-report", label: "Detailed Voting Report", roles: ["counting", "admin"] },
 ];
 
 export default function TopBar() {

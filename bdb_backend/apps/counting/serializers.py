@@ -6,13 +6,12 @@ from .models import Ballot, BallotVote, Candidate, ElectionCategory
 class CandidateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
-        fields = ["id", "category", "serial_no", "candidate_name", "member_name", "is_active"]
+        fields = ["id", "category", "serial_no", "candidate_name", "member_name", "membership_no", "is_active"]
 
     def validate_serial_no(self, value):
         if value < 1:
             raise serializers.ValidationError("Candidate serial number must be 1 or greater.")
         return value
-
 
 class ElectionCategorySerializer(serializers.ModelSerializer):
     votes_per_ballot = serializers.IntegerField(read_only=True)
