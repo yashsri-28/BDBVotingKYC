@@ -121,9 +121,16 @@ export async function fetchMySummary() {
   return data;
 }
 
+// export async function fetchAllotments(filters = {}) {
+//   const { data } = await api.get("/ballots/allotments/", { params: filters });
+//   return data.results || data;
+// }
 export async function fetchAllotments(filters = {}) {
   const { data } = await api.get("/ballots/allotments/", { params: filters });
-  return data.results || data;
+  if (data.results) {
+    return { rows: data.results, count: data.count, next: data.next, previous: data.previous };
+  }
+  return { rows: Array.isArray(data) ? data : [], count: data.length || 0, next: null, previous: null };
 }
 
 // --- Authorized Representative change ---

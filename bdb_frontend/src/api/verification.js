@@ -27,9 +27,20 @@ export async function manualSearch(query) {
   return data;
 }
 
-export async function fetchAuditLogs(customerCode) {
+// export async function fetchAuditLogs(customerCode) {
+//   const { data } = await api.get("/audit/logs/", {
+//     params: customerCode ? { customer_code: customerCode } : {},
+//   });
+//   return data;
+// }
+
+
+export async function fetchAuditLogs(customerCode, page = 1) {
   const { data } = await api.get("/audit/logs/", {
-    params: customerCode ? { customer_code: customerCode } : {},
+    params: { ...(customerCode ? { customer_code: customerCode } : {}), page },
   });
-  return data;
+  if (data.results) {
+    return { rows: data.results, count: data.count, next: data.next, previous: data.previous };
+  }
+  return { rows: Array.isArray(data) ? data : [], count: data.length || 0, next: null, previous: null };
 }

@@ -148,7 +148,7 @@
 //       {error && <div className="mb-4"><Alert type="error" onDismiss={() => setError("")}>{error}</Alert></div>}
 
 //       {/* Category strip — only the in-progress one is usable, the rest stay disabled */}
-    
+
 //       <div className="mb-6 flex flex-wrap gap-2">
 //         {categories.map((cat) => {
 //           const isActive = activeCategory?.id === cat.id;
@@ -370,6 +370,9 @@ export default function VoteCounting() {
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [ballotSearch, setBallotSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const BALLOTS_PER_PAGE = 4;
 
   const ballotInputRef = useRef(null);
 
@@ -434,6 +437,9 @@ export default function VoteCounting() {
   useEffect(() => {
     if (activeCategory) refreshCategoryData(activeCategory.id);
   }, [activeCategory, refreshCategoryData]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [ballotSearch, recentBallots]);
 
   const votesRequired = activeCategory?.votes_per_ballot ?? 0;
   const canSave = ballotNo.trim() !== "" && picked.length === votesRequired;
@@ -482,6 +488,21 @@ export default function VoteCounting() {
   if (loading) {
     return <div className="mx-auto max-w-6xl px-4 py-8 text-slate-400">Loading counting screen…</div>;
   }
+  const filteredBallots = recentBallots.filter((b) => {
+    const term = ballotSearch.trim().toLowerCase();
+    if (!term) return true;
+    const ballotMatch = String(b.ballot_no).toLowerCase().includes(term);
+    const candidateMatch = b.candidate_serials.some((s) =>
+      String(s).toLowerCase().includes(term)
+    );
+    return ballotMatch || candidateMatch;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredBallots.length / BALLOTS_PER_PAGE));
+  const paginatedBallots = filteredBallots.slice(
+    (currentPage - 1) * BALLOTS_PER_PAGE,
+    currentPage * BALLOTS_PER_PAGE
+  );
 
   return (
     <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
@@ -509,22 +530,19 @@ export default function VoteCounting() {
             return (
               <div
                 key={cat.id}
-                className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition-all ${
-                  isActive
+                className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition-all ${isActive
                     ? "border-blue-300 bg-blue-50 shadow-sm"
                     : done
-                    ? "border-emerald-200 bg-emerald-50"
-                    : "border-slate-200 bg-slate-50"
-                }`}
+                      ? "border-emerald-200 bg-emerald-50"
+                      : "border-slate-200 bg-slate-50"
+                  }`}
               >
-                <span className={`h-2.5 w-2.5 rounded-full ${
-                  isActive ? "animate-pulse bg-blue-600" : done ? "bg-emerald-500" : "bg-slate-400"
-                }`} />
+                <span className={`h-2.5 w-2.5 rounded-full ${isActive ? "animate-pulse bg-blue-600" : done ? "bg-emerald-500" : "bg-slate-400"
+                  }`} />
                 <div>
                   <div className="text-sm font-bold text-slate-900">{cat.name}</div>
-                  <div className={`text-[10px] font-bold uppercase tracking-wide ${
-                    isActive ? "text-blue-700" : done ? "text-emerald-700" : "text-slate-400"
-                  }`}>
+                  <div className={`text-[10px] font-bold uppercase tracking-wide ${isActive ? "text-blue-700" : done ? "text-emerald-700" : "text-slate-400"
+                    }`}>
                     {done ? "Completed" : isActive ? "In Progress" : "Locked"}
                   </div>
                 </div>
@@ -591,9 +609,8 @@ export default function VoteCounting() {
 
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Candidates Voted For</span>
-                <span className={`rounded px-2 py-0.5 text-xs font-bold ${
-                  picked.length === votesRequired ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-                }`}>
+                <span className={`rounded px-2 py-0.5 text-xs font-bold ${picked.length === votesRequired ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                  }`}>
                   {picked.length} of {votesRequired} selected
                 </span>
               </div>
@@ -608,17 +625,15 @@ export default function VoteCounting() {
                         type="button"
                         onClick={() => togglePick(c.serial_no)}
                         disabled={atLimit}
-                        className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all ${
-                          isPicked
+                        className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all ${isPicked
                             ? "border-blue-500 bg-blue-50 shadow-sm"
                             : atLimit
-                            ? "cursor-not-allowed border-slate-200 bg-slate-50 opacity-50"
-                            : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40"
-                        }`}
+                              ? "cursor-not-allowed border-slate-200 bg-slate-50 opacity-50"
+                              : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40"
+                          }`}
                       >
-                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-mono text-sm font-bold ${
-                          isPicked ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-700"
-                        }`}>
+                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-mono text-sm font-bold ${isPicked ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-700"
+                          }`}>
                           {c.serial_no}
                         </span>
                         <span className="min-w-0 flex-1">
@@ -645,9 +660,8 @@ export default function VoteCounting() {
                 <button
                   onClick={handleSave}
                   disabled={!canSave || saving}
-                  className={`flex items-center space-x-2 rounded-lg px-6 py-2.5 text-xs font-bold shadow-md transition-all ${
-                    canSave && !saving ? "bg-emerald-600 text-white hover:bg-emerald-700" : "cursor-not-allowed bg-slate-300 text-slate-500"
-                  }`}
+                  className={`flex items-center space-x-2 rounded-lg px-6 py-2.5 text-xs font-bold shadow-md transition-all ${canSave && !saving ? "bg-emerald-600 text-white hover:bg-emerald-700" : "cursor-not-allowed bg-slate-300 text-slate-500"
+                    }`}
                 >
                   <span>{saving ? "Saving…" : "Save Ballot"}</span>
                 </button>
@@ -687,7 +701,7 @@ export default function VoteCounting() {
               </div>
             )}
 
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            {/* <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-800 bg-blue-900 px-4 py-3">
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-white">Recent Ballots</h3>
               </div>
@@ -710,6 +724,72 @@ export default function VoteCounting() {
                       </li>
                     ))}
                   </ul>
+                )}
+              </div>
+            </div> */}
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-800 bg-blue-900 px-4 py-3">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-white">Recent Ballots</h3>
+              </div>
+              <div className="p-4">
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    value={ballotSearch}
+                    onChange={(e) => setBallotSearch(e.target.value)}
+                    placeholder="Search by ballot no. or candidate serial"
+                    className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-900 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {filteredBallots.length === 0 ? (
+                  <p className="text-xs text-slate-400">
+                    {recentBallots.length === 0
+                      ? "No ballots entered yet."
+                      : "No ballots match your search."}
+                  </p>
+                ) : (
+                  <>
+                    <ul className="space-y-1.5">
+                      {paginatedBallots.map((b) => (
+                        <li key={b.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs">
+                          <span className="rounded bg-slate-800 px-2 py-0.5 font-mono font-bold text-white">#{b.ballot_no}</span>
+                          <span className="font-mono text-slate-600">{b.candidate_serials.join(", ")}</span>
+                          <button
+                            onClick={() => handleDelete(b)}
+                            className="font-bold text-rose-600 hover:underline"
+                            aria-label={`Remove ballot ${b.ballot_no}`}
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {totalPages > 1 && (
+                      <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="rounded-lg bg-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-700 transition-all hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Prev
+                        </button>
+                        <span className="text-[11px] font-bold text-slate-500">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="rounded-lg bg-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-700 transition-all hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

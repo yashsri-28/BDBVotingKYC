@@ -114,17 +114,62 @@ class KycSubmission(models.Model):
 
 
 
+# class OnlinePayment(models.Model):
+#     """
+#     Maps to `online_payments` — the actual payment transaction log.
+#     Used to derive Annual Fee Paid/Unpaid status per customer_code,
+#     based on the LATEST payment record for that code (replaces
+#     members_master.membership_fees_status as the source of truth).
+#     """
+
+#     fee_type = models.CharField(max_length=50, blank=True, null=True)
+#     payment_year = models.CharField(max_length=20, blank=True, null=True)
+#     amount = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+#     status = models.CharField(max_length=20, blank=True, null=True)  # "Paid" / "pending" / "Failed"
+#     payment_date = models.DateTimeField(blank=True, null=True)
+#     created_at = models.DateTimeField(blank=True, null=True)
+#     customer_code = models.CharField(max_length=50, blank=True, null=True)
+
+#     class Meta:
+#         managed = False
+#         db_table = "online_payments"
+
+#     @classmethod
+#     def latest_status_for(cls, customer_code):
+#         latest = (
+#             cls.objects.filter(customer_code=customer_code)
+#             .order_by("-created_at", "-id")
+#             .first()
+#         )
+#         return latest.status if latest else None
+
+#     @classmethod
+#     def is_fee_paid(cls, customer_code):
+#         return cls.latest_status_for(customer_code) == "Paid"
+
+
 class OnlinePayment(models.Model):
     """
-    Maps to `online_payments` — the actual payment transaction log.
-    Used to derive Annual Fee Paid/Unpaid status per customer_code,
-    based on the LATEST payment record for that code (replaces
-    members_master.membership_fees_status as the source of truth).
+    Maps to `payments` — the detailed fee payment ledger, one row per
+    invoice/fee cycle, with an explicit from_date/to_date validity range
+    per record (confirmed 2026-07-31, replacing the earlier simpler
+    online_payments mapping). Used to derive Annual Fee Paid/Unpaid
+    status per customer_code: a member is treated as "paid" only when
+    they have a "Paid" record whose from_date/to_date window covers
+    TODAY's date -- i.e. their payment is valid for the CURRENT
+    financial year, not just paid at some point in the past.
     """
 
     fee_type = models.CharField(max_length=50, blank=True, null=True)
-    payment_year = models.CharField(max_length=20, blank=True, null=True)
+    from_date = models.DateField(blank=True, null=True)
+    to_date = models.DateField(blank=True, null=True)
+    invoice_doc_num = models.CharField(max_length=50, blank=True, null=True)
+    invoice_doc_entry = models.CharField(max_length=50, blank=True, null=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    penalty_amount = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    payment_year = models.CharField(max_length=20, blank=True, null=True)
+    payment_mode = models.CharField(max_length=50, blank=True, null=True)
+    reference_no = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, blank=True, null=True)  # "Paid" / "pending" / "Failed"
     payment_date = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(blank=True, null=True)
@@ -132,7 +177,7 @@ class OnlinePayment(models.Model):
 
     class Meta:
         managed = False
-        db_table = "online_payments"
+        db_table = "payments"
 
     @classmethod
     def latest_status_for(cls, customer_code):
@@ -145,4 +190,16 @@ class OnlinePayment(models.Model):
 
     @classmethod
     def is_fee_paid(cls, customer_code):
-        return cls.latest_status_for(customer_code) == "Paid"
+        """
+        True only if there's a "Paid" record for this customer whose
+        from_date/to_date window includes today's date -- i.e. the
+        payment is valid for the CURRENT financial year.
+        """
+        from django.utils import timezone
+        today = timezone.now().date()
+        return cls.objects.filter(
+            customer_code=customer_code,
+            status="Paid",
+            from_date__lte=today,
+            to_date__gte=today,
+        ).exists()

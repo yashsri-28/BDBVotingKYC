@@ -1,4 +1,10 @@
+// import { useState, useEffect } from "react";
+// import { fetchMySummary } from "../api/ballots";
+// import { getErrorMessage } from "../api/client";
+// import { useAuth } from "../context/AuthContext";
+// import { useToast } from "../context/ToastContext";
 import { useState, useEffect } from "react";
+import * as XLSX from "xlsx";
 import { fetchMySummary } from "../api/ballots";
 import { getErrorMessage } from "../api/client";
 import { useAuth } from "../context/AuthContext";
@@ -18,8 +24,26 @@ export default function CounterOwnReport() {
       .finally(() => setLoading(false));
   }, []);
 
+  // function handleExport() {
+  //   showToast("success", "Export generated", "Exported your ballot distribution data to Excel.");
+  // }
+
   function handleExport() {
-    showToast("success", "Export generated", "Exported your ballot distribution data to Excel.");
+    if (rows.length === 0) {
+      showToast("warning", "Nothing to export", "There's no distribution data to export yet.");
+      return;
+    }
+    const exportRows = rows.map((r) => ({
+      "Pool Type": r.roll_type,
+      "Received": r.received,
+      "Distributed": r.distributed,
+      "Balance": r.balance,
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "My Distribution");
+    XLSX.writeFile(workbook, `my_ballot_distribution_${Date.now()}.xlsx`);
+    showToast("success", "Export generated", "Your ballot distribution data has been exported to Excel.");
   }
 
   const category = rows.find((r) => r.roll_type === "category") || { received: 0, distributed: 0, balance: 0 };

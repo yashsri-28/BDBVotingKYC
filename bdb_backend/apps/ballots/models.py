@@ -157,15 +157,35 @@ class CustomerCodeAllotment(models.Model):
     voting_eligibility_source = models.CharField(max_length=20, blank=True)
     eligibility_remark_at_allotment = models.CharField(max_length=255, blank=True)
 
+    # class Meta:
+    #     constraints = [
+    #         # One allotment per customer code, ever -- this is what makes
+    #         # an already-allotted code impossible to re-mark.
+    #         models.UniqueConstraint(fields=["customer_code"], name="unique_allotment_per_customer_code"),
+    #     ]
+    #     indexes = [
+    #         models.Index(fields=["access_card_number"]),
+    #         models.Index(fields=["allotted_at"]),
+    #     ]
+    #     ordering = ["-allotted_at"]
     class Meta:
         constraints = [
             # One allotment per customer code, ever -- this is what makes
             # an already-allotted code impossible to re-mark.
             models.UniqueConstraint(fields=["customer_code"], name="unique_allotment_per_customer_code"),
         ]
+        # indexes = [
+        #     models.Index(fields=["access_card_number"]),
+        #     models.Index(fields=["allotted_at"]),
+        #     models.Index(fields=["roll_type"]),
+        #     models.Index(fields=["allotted_by", "roll_type"]),
+        # ]
         indexes = [
             models.Index(fields=["access_card_number"]),
             models.Index(fields=["allotted_at"]),
+            models.Index(fields=["roll_type"]),
+            models.Index(fields=["allotted_by", "roll_type"]),
+            models.Index(fields=["entity_name"]),
         ]
         ordering = ["-allotted_at"]
 

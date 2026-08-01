@@ -14,9 +14,15 @@ class AuditLog(models.Model):
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    # class Meta:
+    #     ordering = ["-timestamp"]
+    #     indexes = [models.Index(fields=["action", "timestamp"])]
     class Meta:
         ordering = ["-timestamp"]
-        indexes = [models.Index(fields=["action", "timestamp"])]
+        indexes = [
+            models.Index(fields=["action", "timestamp"]),
+            models.Index(fields=["entity_customer_code"]),
+        ]
 
     def __str__(self):
         return f"[{self.timestamp:%Y-%m-%d %H:%M:%S}] {self.actor} — {self.action}"
