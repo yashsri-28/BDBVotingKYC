@@ -56,7 +56,8 @@ class UserManagementViewSet(viewsets.ModelViewSet):
     and Counting logins, activates/deactivates them, and resets
     passwords. No self-signup exists anywhere else in this system.
     """
-    queryset = CounterStaff.objects.exclude(role=CounterStaff.Role.ADMIN).order_by("-date_joined")
+    # queryset = CounterStaff.objects.exclude(role=CounterStaff.Role.ADMIN).order_by("-date_joined")
+    queryset = CounterStaff.objects.all().order_by("-date_joined")
     permission_classes = [IsSuperAdmin]
 
     def get_serializer_class(self):
