@@ -1,4 +1,7 @@
 @import "tailwindcss";
+button:not(:disabled) {
+  cursor: pointer;
+}
 
 @theme {
   /* Matches the working HTML/Alpine demo's tailwind.config exactly --
