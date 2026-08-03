@@ -165,7 +165,8 @@
 // }
 
 import { useState, useEffect, useCallback } from "react";
-import * as XLSX from "xlsx";
+// import * as XLSX from "xlsx";
+import { exportToPDF } from "../utils/pdfExport";
 import { fetchAllotments } from "../api/ballots";
 import { api } from "../api/client";
 import { getErrorMessage } from "../api/client";
@@ -212,11 +213,60 @@ export default function MasterReport() {
   // Search/filter changes should always jump back to page 1
   useEffect(() => { setPage(1); }, [rollType, search]);
 
+  // async function handleExport() {
+  //   setExporting(true);
+  //   try {
+  //     // Pull every page from the backend (not just what's on screen),
+  //     // so the export is complete even with 5000+ records.
+  //     const filters = {};
+  //     if (rollType !== "ALL") filters.roll_type = rollType;
+  //     if (search.trim()) filters.search = search.trim();
+
+  //     let allRows = [];
+  //     let nextUrl = null;
+  //     let firstPage = await fetchAllotments({ ...filters, page: 1 });
+  //     allRows = allRows.concat(firstPage.rows);
+  //     nextUrl = firstPage.next;
+
+  //     while (nextUrl) {
+  //       const { data } = await api.get(nextUrl);
+  //       allRows = allRows.concat(data.results || []);
+  //       nextUrl = data.next;
+  //     }
+
+  //     if (allRows.length === 0) {
+  //       showToast("warning", "Nothing to export", "There are no allotment records to export yet.");
+  //       return;
+  //     }
+
+  //     const exportRows = allRows.map((row) => ({
+  //       "Access Card": row.access_card_number,
+  //       "Customer Code": row.customer_code,
+  //       "Entity Name": row.entity_name,
+  //       "Pool": row.roll_type,
+  //       "Ballots": row.ballots_allotted,
+  //       "Membership Status": row.membership_status_at_allotment || "—",
+  //       "Payment Status": row.fee_status_at_allotment || "—",
+  //       "Eligibility Source": row.voting_eligibility_source || "—",
+  //       "Eligibility Remark": row.eligibility_remark_at_allotment || "—",
+  //       "Allotted By": row.allotted_by_username || "—",
+  //       "Timestamp": new Date(row.allotted_at).toLocaleString(),
+  //     }));
+  //     const worksheet = XLSX.utils.json_to_sheet(exportRows);
+  //     const workbook = XLSX.utils.book_new();
+  //     XLSX.utils.book_append_sheet(workbook, worksheet, "Master Allotment Report");
+  //     XLSX.writeFile(workbook, `master_allotment_report_${Date.now()}.xlsx`);
+  //     showToast("success", "Export generated", `Exported ${allRows.length} records to Excel successfully.`);
+  //   } catch (err) {
+  //     showToast("danger", "Export failed", getErrorMessage(err));
+  //   } finally {
+  //     setExporting(false);
+  //   }
+  // }
+
   async function handleExport() {
     setExporting(true);
     try {
-      // Pull every page from the backend (not just what's on screen),
-      // so the export is complete even with 5000+ records.
       const filters = {};
       if (rollType !== "ALL") filters.roll_type = rollType;
       if (search.trim()) filters.search = search.trim();
@@ -251,11 +301,13 @@ export default function MasterReport() {
         "Allotted By": row.allotted_by_username || "—",
         "Timestamp": new Date(row.allotted_at).toLocaleString(),
       }));
-      const worksheet = XLSX.utils.json_to_sheet(exportRows);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Master Allotment Report");
-      XLSX.writeFile(workbook, `master_allotment_report_${Date.now()}.xlsx`);
-      showToast("success", "Export generated", `Exported ${allRows.length} records to Excel successfully.`);
+
+      exportToPDF({
+        title: "Master Allotment Transaction Report",
+        rows: exportRows,
+        filename: `master_allotment_report_${Date.now()}`,
+      });
+      showToast("success", "Export generated", `Exported ${allRows.length} records to PDF successfully.`);
     } catch (err) {
       showToast("danger", "Export failed", getErrorMessage(err));
     } finally {
@@ -284,7 +336,8 @@ export default function MasterReport() {
               disabled={exporting}
               className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-800 disabled:opacity-60"
             >
-              <span>{exporting ? "Exporting…" : "Export Full Transaction Excel"}</span>
+              {/* <span>{exporting ? "Exporting…" : "Export Full Transaction Excel"}</span> */}
+              <span>{exporting ? "Exporting…" : "Export Full Transaction PDF"}</span>
             </button>
           )}
         </div>

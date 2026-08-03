@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchDashboard } from "../api/ballots";
+import { exportToPDF } from "../utils/pdfExport";
 import { getErrorMessage } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -18,8 +19,36 @@ export default function AdminMatrix() {
       .finally(() => setLoading(false));
   }, []);
 
+  // function handleExport() {
+  //   showToast("success", "Export generated", "Exported All-Counter dataset to Excel format successfully.");
+  // }
   function handleExport() {
-    showToast("success", "Export generated", "Exported All-Counter dataset to Excel format successfully.");
+    const rows = [];
+    pools.forEach((pool) => {
+      pool.counters.forEach((row) => {
+        const pct = row.assigned_count ? Math.round((row.used_count / row.assigned_count) * 100) : 0;
+        rows.push({
+          "Pool": pool.roll_type,
+          "Counter": row.counter_name,
+          "Distributed to Counter": row.assigned_count,
+          "Distributed to Member": row.used_count,
+          "Balance with Counter": row.remaining_count,
+          "Efficiency %": pct,
+        });
+      });
+    });
+
+    if (rows.length === 0) {
+      showToast("warning", "Nothing to export", "There is no counter distribution data to export yet.");
+      return;
+    }
+
+    exportToPDF({
+      title: "Super Admin All-Counter Matrix",
+      rows,
+      filename: `all_counter_matrix_${Date.now()}`,
+    });
+    showToast("success", "Export generated", "Exported All-Counter dataset to PDF successfully.");
   }
 
   if (loading) return <div className="mx-auto max-w-7xl px-4 py-8 text-slate-400">Loading…</div>;
@@ -39,7 +68,7 @@ export default function AdminMatrix() {
           </div>
           {user?.role === "admin" && (
             <button onClick={handleExport} className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-800">
-              <span>Export All-Counter Excel</span>
+              <span>Export All-Counter Pdf</span>
             </button>
           )}
         </div>

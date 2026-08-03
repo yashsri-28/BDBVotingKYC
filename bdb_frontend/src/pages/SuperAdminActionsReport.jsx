@@ -113,7 +113,8 @@
 
 
 import { useState, useEffect, useCallback } from "react";
-import * as XLSX from "xlsx";
+// import * as XLSX from "xlsx";
+import { exportToPDF } from "../utils/pdfExport";
 import { fetchAuditLogs } from "../api/auth";
 import { getErrorMessage } from "../api/client";
 import { useToast } from "../context/ToastContext";
@@ -155,12 +156,52 @@ export default function SuperAdminActionsReport() {
 
   useEffect(() => { setPage(1); }, [filterCode]);
 
-  async function exportToExcel() {
+  // async function exportToExcel() {
+  //   setExporting(true);
+  //   try {
+  //     // Pull every page from the backend (not just the current page),
+  //     // filtered server-side by customer_code if set, so a 5000-row
+  //     // export doesn't require loading 5000 rows into the browser first.
+  //     const filters = {};
+  //     if (filterCode.trim()) filters.customer_code = filterCode.trim();
+
+  //     let allRows = [];
+  //     let currentPage = 1;
+  //     let hasMore = true;
+  //     while (hasMore) {
+  //       const result = await fetchAuditLogs({ ...filters, action: RELEVANT_ACTIONS.join(","), page: currentPage });
+  //       allRows = allRows.concat(result.rows);
+  //       hasMore = !!result.next;
+  //       currentPage += 1;
+  //     }
+
+  //     if (allRows.length === 0) {
+  //       showToast("warning", "Nothing to export", "There are no SuperAdmin actions to export yet.");
+  //       return;
+  //     }
+
+  //     const exportRows = allRows.map((log) => ({
+  //       "Action Type": log.action === "auth_rep_changed" ? "Authorized Rep Change" : "On the Spot Payment / Eligibility",
+  //       "Customer Code": log.entity_customer_code || "",
+  //       "Performed By": log.actor_username || "",
+  //       "Timestamp": new Date(log.timestamp).toLocaleString(),
+  //       "Details": JSON.stringify(log.details),
+  //     }));
+  //     const worksheet = XLSX.utils.json_to_sheet(exportRows);
+  //     const workbook = XLSX.utils.book_new();
+  //     XLSX.utils.book_append_sheet(workbook, worksheet, "SuperAdmin Actions");
+  //     XLSX.writeFile(workbook, `superadmin_actions_${Date.now()}.xlsx`);
+  //     showToast("success", "Export generated", `Exported ${allRows.length} records to Excel successfully.`);
+  //   } catch (err) {
+  //     showToast("danger", "Export failed", getErrorMessage(err));
+  //   } finally {
+  //     setExporting(false);
+  //   }
+  // }
+
+  async function exportToPdf() {
     setExporting(true);
     try {
-      // Pull every page from the backend (not just the current page),
-      // filtered server-side by customer_code if set, so a 5000-row
-      // export doesn't require loading 5000 rows into the browser first.
       const filters = {};
       if (filterCode.trim()) filters.customer_code = filterCode.trim();
 
@@ -186,29 +227,37 @@ export default function SuperAdminActionsReport() {
         "Timestamp": new Date(log.timestamp).toLocaleString(),
         "Details": JSON.stringify(log.details),
       }));
-      const worksheet = XLSX.utils.json_to_sheet(exportRows);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "SuperAdmin Actions");
-      XLSX.writeFile(workbook, `superadmin_actions_${Date.now()}.xlsx`);
-      showToast("success", "Export generated", `Exported ${allRows.length} records to Excel successfully.`);
+
+      exportToPDF({
+        title: "SuperAdmin Actions Report",
+        rows: exportRows,
+        filename: `superadmin_actions_${Date.now()}`,
+      });
+      showToast("success", "Export generated", `Exported ${allRows.length} records to PDF successfully.`);
     } catch (err) {
       showToast("danger", "Export failed", getErrorMessage(err));
     } finally {
       setExporting(false);
     }
   }
-
   return (
     <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-bold text-slate-800">SuperAdmin Actions Report</h2>
-          <button
+          {/* <button
             onClick={exportToExcel}
             disabled={exporting}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
           >
             {exporting ? "Exporting…" : "Download Excel"}
+          </button> */}
+          <button
+            onClick={exportToPdf}
+            disabled={exporting}
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+          >
+            {exporting ? "Exporting…" : "Download PDF"}
           </button>
         </div>
         <input

@@ -4,7 +4,8 @@
 // import { useAuth } from "../context/AuthContext";
 // import { useToast } from "../context/ToastContext";
 import { useState, useEffect } from "react";
-import * as XLSX from "xlsx";
+// import * as XLSX from "xlsx";
+import { exportToPDF } from "../utils/pdfExport";
 import { fetchMySummary } from "../api/ballots";
 import { getErrorMessage } from "../api/client";
 import { useAuth } from "../context/AuthContext";
@@ -28,6 +29,23 @@ export default function CounterOwnReport() {
   //   showToast("success", "Export generated", "Exported your ballot distribution data to Excel.");
   // }
 
+  // function handleExport() {
+  //   if (rows.length === 0) {
+  //     showToast("warning", "Nothing to export", "There's no distribution data to export yet.");
+  //     return;
+  //   }
+  //   const exportRows = rows.map((r) => ({
+  //     "Pool Type": r.roll_type,
+  //     "Received": r.received,
+  //     "Distributed": r.distributed,
+  //     "Balance": r.balance,
+  //   }));
+  //   const worksheet = XLSX.utils.json_to_sheet(exportRows);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "My Distribution");
+  //   XLSX.writeFile(workbook, `my_ballot_distribution_${Date.now()}.xlsx`);
+  //   showToast("success", "Export generated", "Your ballot distribution data has been exported to Excel.");
+  // }
   function handleExport() {
     if (rows.length === 0) {
       showToast("warning", "Nothing to export", "There's no distribution data to export yet.");
@@ -39,11 +57,13 @@ export default function CounterOwnReport() {
       "Distributed": r.distributed,
       "Balance": r.balance,
     }));
-    const worksheet = XLSX.utils.json_to_sheet(exportRows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "My Distribution");
-    XLSX.writeFile(workbook, `my_ballot_distribution_${Date.now()}.xlsx`);
-    showToast("success", "Export generated", "Your ballot distribution data has been exported to Excel.");
+
+    exportToPDF({
+      title: `Ballot Distribution — ${user?.full_name || user?.username}`,
+      rows: exportRows,
+      filename: `my_ballot_distribution_${Date.now()}`,
+    });
+    showToast("success", "Export generated", "Your ballot distribution data has been exported to PDF.");
   }
 
   const category = rows.find((r) => r.roll_type === "category") || { received: 0, distributed: 0, balance: 0 };
@@ -59,8 +79,11 @@ export default function CounterOwnReport() {
             <h2 className="text-base font-bold text-slate-900">Counter Performance &amp; Balance Summary</h2>
             <p className="text-xs text-slate-500">Individual ledger for <strong className="text-slate-800">{user?.full_name || user?.username}</strong></p>
           </div>
-          <button onClick={handleExport} className="flex items-center space-x-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700">
+          {/* <button onClick={handleExport} className="flex items-center space-x-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700">
             <span>Export My Data (Excel)</span>
+          </button> */}
+          <button onClick={handleExport} className="flex items-center space-x-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700">
+            <span>Export My Data (PDF)</span>
           </button>
         </div>
 

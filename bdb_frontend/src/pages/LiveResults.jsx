@@ -197,7 +197,8 @@
 
 
 import { useState, useEffect, useCallback } from "react";
-import * as XLSX from "xlsx";
+// import * as XLSX from "xlsx";
+import { exportToPDF } from "../utils/pdfExport";
 import { fetchCategories, fetchLiveTotals } from "../api/counting";
 import { getErrorMessage } from "../api/client";
 import { useToast } from "../context/ToastContext";
@@ -254,7 +255,25 @@ export default function LiveResults() {
   const selected = categories.find((c) => c.id === selectedId);
   const notStarted = selected && selected.status !== "in_progress" && selected.status !== "completed";
 
-  function handleExport() {
+  // function handleExport() {
+  //   if (!totals || totals.by_serial.length === 0) {
+  //     showToast("warning", "Nothing to export", "There are no results to export yet.");
+  //     return;
+  //   }
+  //   const exportRows = totals.by_leading.map((r, i) => ({
+  //     "Rank": i + 1,
+  //     "Sr. No.": r.serial_no,
+  //     "Candidate": r.candidate_name,
+  //     "Member/Firm": r.member_name || "",
+  //     "Votes": r.votes,
+  //   }));
+  //   const worksheet = XLSX.utils.json_to_sheet(exportRows);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, totals.category.substring(0, 30));
+  //   XLSX.writeFile(workbook, `live_results_${totals.category.replace(/\s+/g, "_")}_${Date.now()}.xlsx`);
+  //   showToast("success", "Export generated", "Live results exported to Excel successfully.");
+  // }
+function handleExport() {
     if (!totals || totals.by_serial.length === 0) {
       showToast("warning", "Nothing to export", "There are no results to export yet.");
       return;
@@ -266,13 +285,14 @@ export default function LiveResults() {
       "Member/Firm": r.member_name || "",
       "Votes": r.votes,
     }));
-    const worksheet = XLSX.utils.json_to_sheet(exportRows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, totals.category.substring(0, 30));
-    XLSX.writeFile(workbook, `live_results_${totals.category.replace(/\s+/g, "_")}_${Date.now()}.xlsx`);
-    showToast("success", "Export generated", "Live results exported to Excel successfully.");
-  }
 
+    exportToPDF({
+      title: `Live Results — ${totals.category} (${totals.election_year})`,
+      rows: exportRows,
+      filename: `live_results_${totals.category.replace(/\s+/g, "_")}_${Date.now()}`,
+    });
+    showToast("success", "Export generated", "Live results exported to PDF successfully.");
+  }
   return (
     <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       {/* Header */}
@@ -292,7 +312,8 @@ export default function LiveResults() {
             disabled={notStarted || categories.length === 0}
             className="flex items-center space-x-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <span>Export Results Excel</span>
+            {/* <span>Export Results Excel</span> */}
+            <span>Export Results PDF</span>
           </button>
         </div>
       </div>

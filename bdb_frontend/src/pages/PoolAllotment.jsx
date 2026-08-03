@@ -537,7 +537,8 @@
 //   );
 // }
 import { useState, useEffect, useCallback } from "react";
-import * as XLSX from "xlsx";
+// import * as XLSX from "xlsx";
+import { exportToPDF } from "../utils/pdfExport";
 import {
   fetchPools, setPoolTotal, fetchAllocations, assignAllocation,
   adjustPoolTotal, adjustAllocation,
@@ -664,7 +665,26 @@ export default function PoolAllotment() {
     }
   }
 
-  function handleExportAllocationsExcel() {
+  // function handleExportAllocationsExcel() {
+  //   if (allocations.length === 0) {
+  //     showToast("warning", "Nothing to export", "There are no allocations yet.");
+  //     return;
+  //   }
+  //   const rows = allocations.map((a) => ({
+  //     "Counter Name": a.counter_name,
+  //     "Pool": a.roll_type === "category" ? "Category" : "Exclusive",
+  //     "Assigned": a.assigned_count,
+  //     "Used": a.used_count,
+  //     "Remaining": a.remaining_count,
+  //   }));
+  //   const worksheet = XLSX.utils.json_to_sheet(rows);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Counter Allocations");
+  //   const today = new Date().toISOString().slice(0, 10);
+  //   XLSX.writeFile(workbook, `counter-allocations-${today}.xlsx`);
+  // }
+
+  function handleExportAllocationsPdf() {
     if (allocations.length === 0) {
       showToast("warning", "Nothing to export", "There are no allocations yet.");
       return;
@@ -676,11 +696,14 @@ export default function PoolAllotment() {
       "Used": a.used_count,
       "Remaining": a.remaining_count,
     }));
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Counter Allocations");
     const today = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(workbook, `counter-allocations-${today}.xlsx`);
+
+    exportToPDF({
+      title: "Counter Allocations Report",
+      rows,
+      filename: `counter-allocations-${today}`,
+    });
+    showToast("success", "Export generated", "Counter allocations exported to PDF successfully.");
   }
 
   if (loading) return <div className="w-full px-3 py-6 text-slate-400">Loading…</div>;
@@ -838,12 +861,12 @@ export default function PoolAllotment() {
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <h3 className="text-sm font-bold text-slate-900">Counter Allocations</h3>
-          <button
+     <button
             type="button"
-            onClick={handleExportAllocationsExcel}
-            className="rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
+            onClick={handleExportAllocationsPdf}
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
           >
-            ⬇ Export Excel
+            ⬇ Export PDF
           </button>
         </div>
         <div className="overflow-x-auto">
