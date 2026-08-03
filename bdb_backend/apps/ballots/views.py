@@ -200,16 +200,36 @@ class CustomerCodeAllotmentViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CustomerCodeAllotmentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    # def get_queryset(self):
+    #     qs = super().get_queryset()
+    #     if getattr(self, "swagger_fake_view", False):
+    #         return qs.none()
+    #     card = self.request.query_params.get("access_card_number")
+    #     roll_type = self.request.query_params.get("roll_type")
+    #     if card:
+    #         qs = qs.filter(access_card_number=card)
+    #     if roll_type:
+    #         qs = qs.filter(roll_type=roll_type)
+    #     if self.request.user.role == CounterStaff.Role.SUPERVISOR:
+    #         qs = qs.filter(allotted_by=self.request.user)
+    #     return qs
     def get_queryset(self):
         qs = super().get_queryset()
         if getattr(self, "swagger_fake_view", False):
             return qs.none()
         card = self.request.query_params.get("access_card_number")
         roll_type = self.request.query_params.get("roll_type")
+        search = self.request.query_params.get("search")
         if card:
             qs = qs.filter(access_card_number=card)
         if roll_type:
             qs = qs.filter(roll_type=roll_type)
+        if search:
+            qs = qs.filter(
+                Q(customer_code__icontains=search)
+                | Q(entity_name__icontains=search)
+                | Q(access_card_number__icontains=search)
+            )
         if self.request.user.role == CounterStaff.Role.SUPERVISOR:
             qs = qs.filter(allotted_by=self.request.user)
         return qs

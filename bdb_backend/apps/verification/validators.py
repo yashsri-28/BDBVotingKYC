@@ -16,7 +16,8 @@ def can_verify(entity_view, existing_record=None, requesting_user=None):
         return False, "Membership Status is not Active"
 
     if entity_view["voting_eligibility"] != "eligible":
-        return False, "Voting Eligibility is Not Eligible"
+        specific_reason = entity_view.get("ineligibility_reason", "")
+        return False, f"Not Eligible — {specific_reason}" if specific_reason else "Voting Eligibility is Not Eligible"
 
     if entity_view["annual_fee_status"] != "paid":
         return False, "Annual Membership Fee is Unpaid"

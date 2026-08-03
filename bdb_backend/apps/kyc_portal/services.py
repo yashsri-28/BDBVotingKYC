@@ -104,21 +104,45 @@ def build_entity_view(kyc_user, member):
     #     voting_eligibility = "not_eligible"
     #     eligibility_source = "online_payment_kyc"
     #     eligibility_remark = ""
+    # if eligibility_override:
+    #     voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
+    #     eligibility_source = "admin_override"
+    #     eligibility_remark = eligibility_override.remarks
+    #     eligibility_updated_by = eligibility_override.updated_by.username if eligibility_override.updated_by else None
+    # elif fee_paid and kyc_approved:
+    #     voting_eligibility = "eligible"
+    #     eligibility_source = "online_payment_kyc"
+    #     eligibility_remark = ""
+    #     eligibility_updated_by = None
+    # else:
+    #     voting_eligibility = "not_eligible"
+    #     eligibility_source = "online_payment_kyc"
+    #     eligibility_remark = ""
+    #     eligibility_updated_by = None
     if eligibility_override:
         voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
         eligibility_source = "admin_override"
         eligibility_remark = eligibility_override.remarks
         eligibility_updated_by = eligibility_override.updated_by.username if eligibility_override.updated_by else None
+        ineligibility_reason = eligibility_remark if not eligibility_override.is_eligible else ""
     elif fee_paid and kyc_approved:
         voting_eligibility = "eligible"
         eligibility_source = "online_payment_kyc"
         eligibility_remark = ""
         eligibility_updated_by = None
+        ineligibility_reason = ""
     else:
         voting_eligibility = "not_eligible"
         eligibility_source = "online_payment_kyc"
         eligibility_remark = ""
         eligibility_updated_by = None
+        # Build a specific, dynamic reason instead of a generic message.
+        missing = []
+        if not fee_paid:
+            missing.append("Annual payment not valid for the current financial year")
+        if not kyc_approved:
+            missing.append("KYC not approved")
+        ineligibility_reason = "; ".join(missing)
 
     return {
         "customer_code": member.customer_code,
@@ -136,6 +160,7 @@ def build_entity_view(kyc_user, member):
         "access_card_number": access_card_number,
         "photograph_path": photograph_path,
         "eligibility_updated_by": eligibility_updated_by,
+        "ineligibility_reason": ineligibility_reason,
         "voting_done": voting_done,
 
         "is_rep_changed": override is not None,
