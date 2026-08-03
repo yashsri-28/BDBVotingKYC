@@ -20,9 +20,11 @@ export default function ManageEligibility() {
     setLoading(true);
     try {
       const data = await searchEntityByCustomerCode(query.trim());
-      setResults(Array.isArray(data) ? data : []);
-      if (!data || data.length === 0) {
+      if (!data) {
+        setResults([]);
         setError("No matching member found.");
+      } else {
+        setResults([data]);
       }
     } catch (err) {
       setResults([]);

@@ -171,6 +171,10 @@ def allot_customer_codes(access_card_number, customer_codes, actor):
             roll_type=entry["roll_type"],
             ballots_allotted=entry["ballot_entitlement"],
             allotted_by=actor,
+            membership_status_at_allotment=entry.get("membership_status", ""),
+            fee_status_at_allotment=entry.get("annual_fee_status", ""),
+            voting_eligibility_source=entry.get("eligibility_source", ""),
+            eligibility_remark_at_allotment=entry.get("eligibility_remark", ""),
         ))
         VotingStatus.objects.update_or_create(
             customer_code=code,
