@@ -35,6 +35,7 @@ class ElectionCategory(models.Model):
     class Kind(models.TextChoices):
         CATEGORY = "category", "Category Member"
         EXCLUSIVE = "exclusive", "Exclusive Member"
+        WOMEN = "women", "Women"
 
     class Status(models.TextChoices):
         INACTIVE = "inactive", "Inactive"
@@ -65,10 +66,14 @@ class ElectionCategory(models.Model):
     def __str__(self):
         return f"{self.name} ({self.election_year})"
 
+    # @property
+    # def votes_per_ballot(self):
+    #     """Exclusive ballots carry 1 vote; category ballots carry 2."""
+    #     return 1 if self.kind == self.Kind.EXCLUSIVE else 2
     @property
     def votes_per_ballot(self):
-        """Exclusive ballots carry 1 vote; category ballots carry 2."""
-        return 1 if self.kind == self.Kind.EXCLUSIVE else 2
+        """Exclusive and Women ballots carry 1 vote; category ballots carry 2."""
+        return 1 if self.kind in (self.Kind.EXCLUSIVE, self.Kind.WOMEN) else 2
 
     @property
     def is_open_for_counting(self):

@@ -9,6 +9,7 @@ import { useToast } from "../context/ToastContext";
 const KIND_OPTIONS = [
   { value: "category", label: "Category Member" },
   { value: "exclusive", label: "Exclusive Member" },
+  { value: "women", label: "Women" },
 ];
 
 export default function CandidateMaster() {

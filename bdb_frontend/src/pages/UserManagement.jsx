@@ -193,7 +193,7 @@ import { getErrorMessage } from "../api/client";
 import { useToast } from "../context/ToastContext";
 import Modal from "../components/Modal";
 
-const ROLE_LABELS = { supervisor: "Counter", counting: "Counting", admin: "Super Admin" };
+const ROLE_LABELS = { supervisor: "Counter", counting: "Counting", admin: "Returning Officer" };
 
 export default function UserManagement() {
   const { showToast } = useToast();
@@ -366,7 +366,7 @@ function CreateLoginModal({ open, onClose, onCreated }) {
           <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full rounded-lg border border-slate-300 p-2 font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="supervisor">Counter</option>
             <option value="counting">Counting</option>
-            <option value="admin">Super Admin</option>
+            <option value="admin">Returning Officer (RO).</option>
           </select>
         </div>
         <div className="flex justify-end space-x-3 border-t border-slate-200 pt-3">
