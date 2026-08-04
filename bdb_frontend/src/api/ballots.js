@@ -159,10 +159,17 @@ export async function fetchAuthRepHistory(customerCode) {
 // (project docs §5: GET /kyc/manual-search/?q= now also matches
 // access_code). Returns the first matching result, since this screen
 // shows one entity's eligibility card at a time.
+// export async function searchEntityByCustomerCode(query) {
+//   const { data } = await api.get("/kyc/manual-search/", { params: { q: query } });
+//   const results = data.results || data;
+//   return Array.isArray(results) ? results[0] : results;
+// }
+
+
 export async function searchEntityByCustomerCode(query) {
   const { data } = await api.get("/kyc/manual-search/", { params: { q: query } });
   const results = data.results || data;
-  return Array.isArray(results) ? results[0] : results;
+  return Array.isArray(results) ? results : [results];
 }
 
 // Sets/overrides voting eligibility for a customer code -- the "On the

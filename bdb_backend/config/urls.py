@@ -121,10 +121,29 @@ urlpatterns = [
 # Media serving — handles the KYC portal's inconsistent profile/profile/
 # nesting by trying both the expected and double-nested path.
 # ---------------------------------------------------------------------------
+# @require_GET
+# def serve_kyc_media(request, path):
+#     candidates = [
+#         os.path.join(settings.KYC_MEDIA_ROOT, path),
+#     ]
+#     parts = path.rsplit("/", 1)
+#     if len(parts) == 2:
+#         folder, filename = parts
+#         last_segment = folder.rsplit("/", 1)[-1]
+#         candidates.append(os.path.join(settings.KYC_MEDIA_ROOT, folder, last_segment, filename))
+
+#     for candidate in candidates:
+#         if os.path.isfile(candidate):
+#             return FileResponse(open(candidate, "rb"))
+
+#     raise Http404(f"Media file not found: {path}")
+
+
 @require_GET
 def serve_kyc_media(request, path):
     candidates = [
         os.path.join(settings.KYC_MEDIA_ROOT, path),
+        os.path.join(settings.MEDIA_ROOT, path),  # our own uploads: auth_rep_photos/, auth_rep_documents/
     ]
     parts = path.rsplit("/", 1)
     if len(parts) == 2:

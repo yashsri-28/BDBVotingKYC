@@ -5,7 +5,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
-from django.db.models import Q
+from django.db.models import Q, Count
 
 from apps.accounts.permissions import IsAdminOrCounting, IsSupervisorOrAdmin, IsSuperAdmin
 from apps.audit.models import AuditLog
@@ -263,6 +263,25 @@ class CustomerCodeAllotmentViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.user.role == CounterStaff.Role.SUPERVISOR:
             qs = qs.filter(allotted_by=self.request.user)
         return qs
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+
+        # Add a roll-type breakdown alongside the paginated results, so
+        # the frontend doesn't need a separate call to know "how many
+        # Category vs Exclusive ballots have been allotted overall"
+        # (respecting the same filters as the main query).
+        qs = self.filter_queryset(self.get_queryset())
+        breakdown = qs.values("roll_type").annotate(total=Count("id"))
+        summary = {"category": 0, "exclusive": 0}
+        for row in breakdown:
+            summary[row["roll_type"]] = row["total"]
+
+        response.data["summary"] = {
+            "category_allotted": summary["category"],
+            "exclusive_allotted": summary["exclusive"],
+            "total_allotted": summary["category"] + summary["exclusive"],
+        }
+        return response
 
 
 class AuthRepChangeView(APIView):

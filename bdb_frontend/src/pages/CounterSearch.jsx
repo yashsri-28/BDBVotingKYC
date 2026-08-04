@@ -648,7 +648,8 @@ async function runSearch(card) {
           {canEditAuthRep && (
             <div className="flex items-center justify-end">
               <button
-                onClick={() => setRepModalEntity({ customer_code: result.customer_codes[0]?.customer_code, representative_name: result.representative_name })}
+                // onClick={() => setRepModalEntity({ customer_code: result.customer_codes[0]?.customer_code, representative_name: result.representative_name })}
+                onClick={() => setRepModalEntity(true)}
                 className="flex items-center space-x-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3.5 py-2 text-xs font-semibold text-purple-700 shadow-sm transition-all hover:bg-purple-100"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -809,10 +810,16 @@ async function runSearch(card) {
         </div>
       )}
 
-      <AuthRepModal
+      {/* <AuthRepModal
         open={!!repModalEntity}
         onClose={() => setRepModalEntity(null)}
         entity={repModalEntity}
+        onChanged={() => runSearch(result.access_card_number)}
+      /> */}
+      <AuthRepModal
+        open={!!repModalEntity}
+        onClose={() => setRepModalEntity(null)}
+        entities={result?.customer_codes || []}
         onChanged={() => runSearch(result.access_card_number)}
       />
     </div>

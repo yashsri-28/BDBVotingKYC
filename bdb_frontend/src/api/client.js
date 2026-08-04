@@ -10,8 +10,10 @@ export const WS_BASE_URL = BASE_URL.replace(/^http/, "ws");
 export const MEDIA_BASE_URL = `${BASE_URL}/media`;
 
 
+// export const mediaUrl = (path) =>
+//   path ? `${import.meta.env.VITE_API_BASE_URL}/media/${path}` : null;
 export const mediaUrl = (path) =>
-  path ? `${import.meta.env.VITE_API_BASE_URL}/media/${path}` : null;
+  path ? `${import.meta.env.VITE_API_BASE_URL}/media/${path.trim()}` : null;
 
 export const api = axios.create({
   baseURL: `${BASE_URL}/api`,

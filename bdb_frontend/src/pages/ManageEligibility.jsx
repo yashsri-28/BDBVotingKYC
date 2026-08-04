@@ -19,12 +19,20 @@ export default function ManageEligibility() {
     }
     setLoading(true);
     try {
+      // const data = await searchEntityByCustomerCode(query.trim());
+      // if (!data) {
+      //   setResults([]);
+      //   setError("No matching member found.");
+      // } else {
+      //   setResults([data]);
+      // }
+
       const data = await searchEntityByCustomerCode(query.trim());
-      if (!data) {
+      if (!data || data.length === 0) {
         setResults([]);
         setError("No matching member found.");
       } else {
-        setResults([data]);
+        setResults(data);
       }
     } catch (err) {
       setResults([]);
