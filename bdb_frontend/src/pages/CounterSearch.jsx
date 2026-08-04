@@ -634,7 +634,7 @@ async function runSearch(card) {
                   key={row.roll_type}
                   className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${row.balance === 0 ? "border-rose-200 bg-rose-50 text-rose-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}
                 >
-                  {row.roll_type === "category" ? "Category" : "Exclusive"}: {row.balance} / {row.received} left
+                  {row.roll_type === "category" ? "Category" : "Exclusive"}: {row.balance} / {row.received}
                 </div>
               ))}
             </div>
@@ -870,9 +870,9 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
           <span className={`rounded px-2 py-0.5 font-mono text-xs font-bold ${locked ? "bg-rose-100 text-rose-800" : blocked ? "bg-slate-200 text-slate-500" : "bg-emerald-100 text-emerald-800"}`}>
             {locked ? "ALLOTTED" : blocked ? "BLOCKED" : "OPEN"}
           </span>
-          <span className={`rounded px-2 py-0.5 font-mono text-xs font-bold ${locked ? "bg-rose-100 text-rose-800" : blocked ? "bg-slate-200 text-slate-500" : "bg-emerald-100 text-emerald-800"}`}>
+          {/* <span className={`rounded px-2 py-0.5 font-mono text-xs font-bold ${locked ? "bg-rose-100 text-rose-800" : blocked ? "bg-slate-200 text-slate-500" : "bg-emerald-100 text-emerald-800"}`}>
             {locked ? "ALLOTTED" : blocked ? "BLOCKED" : "OPEN"}
-          </span>
+          </span> */}
           <span className={`rounded px-2 py-0.5 font-mono text-[10px] font-bold ${code.voting_done ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-500"}`}>
             Voting: {code.voting_done ? "Yes" : "No"}
           </span>

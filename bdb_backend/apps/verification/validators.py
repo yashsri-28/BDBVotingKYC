@@ -19,8 +19,14 @@ def can_verify(entity_view, existing_record=None, requesting_user=None):
         specific_reason = entity_view.get("ineligibility_reason", "")
         return False, f"Not Eligible — {specific_reason}" if specific_reason else "Voting Eligibility is Not Eligible"
 
-    if entity_view["annual_fee_status"] != "paid":
+    # if entity_view["annual_fee_status"] != "paid":
+    #     return False, "Annual Membership Fee is Unpaid"
+    # Skip this specific fee check when a Super Admin has explicitly
+    # overridden eligibility (e.g. "On the Spot Payment") — their manual
+    # decision should not be blocked by this older, separate check.
+    if entity_view.get("eligibility_source") != "admin_override" and entity_view["annual_fee_status"] != "paid":
         return False, "Annual Membership Fee is Unpaid"
+
 
     if existing_record and existing_record.verification_status != VerificationRecord.Status.PENDING:
         return False, "Verification already completed for this entity"
