@@ -144,7 +144,7 @@ export default function Login() {
         </form>
 
         <div className="border-t border-slate-100 pt-2 text-center font-mono text-[10px] text-slate-400">
-          BDB Voting &amp; KYC Portal v2.5
+          BDB Voting
         </div>
       </div>
     </div>

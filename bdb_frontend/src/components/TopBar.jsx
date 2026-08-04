@@ -241,7 +241,7 @@ export default function TopBar() {
 </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-base font-bold tracking-tight text-slate-700">BDB Voting &amp; KYC Portal</span>
+                  <span className="text-base font-bold tracking-tight text-slate-700">BDB Voting</span>
                   <span className="rounded border border-blue-700/50 bg-blue-900/80 px-2 py-0.5 text-[10px] font-bold text-blue-300">v2.5</span>
                 </div>
                 <p className="text-[11px] text-slate-400">Elections Management, KYC Verification &amp; Ballot Allotment</p>

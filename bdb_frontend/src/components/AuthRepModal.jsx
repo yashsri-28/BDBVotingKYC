@@ -153,7 +153,7 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
       return;
     }
     if (!newName.trim()) {
-      setError("Please enter the new Authorized Representative's name.");
+      setError("Please enter the Nominee Voter name.");
       return;
     }
     setSaving(true);
@@ -221,7 +221,7 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
         </div>
 
         <div>
-          <label className="mb-1 block font-bold text-slate-700">New Authorized Representative Name</label>
+          <label className="mb-1 block font-bold text-slate-700">Nominee Voter Name</label>
           <input
             type="text" required value={newName} onChange={(e) => setNewName(e.target.value)}
             className="w-full rounded-lg border border-slate-300 bg-white p-2 font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
