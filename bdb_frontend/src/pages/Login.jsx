@@ -47,7 +47,7 @@ export default function Login() {
   <img src="./images/bdb-mainlogo.svg" alt="BDB" className="h-full w-full object-contain" />
 </div>
 
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-900">BDB Voting &amp; KYC Portal</h1>
+          <h1 className="text-xl font-extrabold tracking-tight text-slate-900">BDB Voting</h1>
           <p className="text-xs text-slate-500">Sign in to access elections management &amp; ballot allotments</p>
         </div>
 
