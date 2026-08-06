@@ -39,6 +39,7 @@ class KycUser(models.Model):
     profile_picture = models.CharField(max_length=500, blank=True, null=True)  # Photograph path
     role_id = models.IntegerField(blank=True, null=True)
     created_at = models.DateTimeField(blank=True, null=True)
+    credential_no = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         managed = False

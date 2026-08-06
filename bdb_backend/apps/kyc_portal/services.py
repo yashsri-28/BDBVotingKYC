@@ -11,6 +11,9 @@ from django.db.models import Q
 from .models import KycUser, MembersMaster, KycSubmission
 
 
+
+
+
 def find_users_by_card(access_card_number):
     """
     Section 3: resolve card -> ALL matching users rows (may be 1 or many —
@@ -205,3 +208,17 @@ def manual_search(query):
             continue
         results.append(build_entity_view(user, member))
     return results
+
+
+
+def resolve_credential(credential_no):
+    """
+    Looks up which access_code (Access Card Number) a raw reader
+    credential_no belongs to, so an automatic card-scan can be
+    resolved into the same identifier manual_search already accepts.
+    Returns the access_code string, or None if not found.
+    """
+    user = KycUser.objects.filter(credential_no=credential_no).first()
+    if not user:
+        return None
+    return user.access_code

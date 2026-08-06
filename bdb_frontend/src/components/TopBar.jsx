@@ -236,9 +236,9 @@ export default function TopBar() {
         <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-18 items-center justify-between">
             <div className="flex items-center space-x-3">
-    <div className="mx-auto flex h-14 items-center justify-center mr-3">
-  <img src="./images/bdb-mainlogo.svg" alt="BDB" className="h-full w-full object-contain" />
-</div>
+              <div className="mx-auto flex h-14 items-center justify-center mr-3">
+                <img src="./images/bdb-mainlogo.svg" alt="BDB" className="h-full w-full object-contain" />
+              </div>
               <div>
                 <div className="flex items-center space-x-2">
                   <span className="text-base font-bold tracking-tight text-slate-700">BDB Voting</span>
@@ -318,11 +318,10 @@ export default function TopBar() {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`whitespace-nowrap rounded-lg border-b-2 px-3 py-2 text-xs font-medium transition-all ${
-                  location.pathname === item.path
+                className={`whitespace-nowrap rounded-lg border-b-2 px-3 py-2 text-xs font-medium transition-all ${location.pathname === item.path
                     ? "border-blue-600 bg-blue-50 font-bold text-blue-700"
                     : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
+                  }`}
               >
                 {item.label}
               </button>

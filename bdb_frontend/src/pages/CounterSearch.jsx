@@ -478,7 +478,8 @@
 
 
 // import { useState } from "react";
-import { useState, useEffect } from "react";
+// import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { searchAccessCard, allotCustomerCodes } from "../api/ballots";
 import { getErrorMessage } from "../api/client";
 import { useToast } from "../context/ToastContext";
@@ -486,6 +487,8 @@ import { useAuth } from "../context/AuthContext";
 import AuthRepModal from "../components/AuthRepModal";
 import { mediaUrl } from "../api/client";
 import { fetchMySummary } from "../api/ballots";
+import { getLatestTaps } from "../api/sipass";
+import { resolveCredential } from "../api/kyc";
 
 function initials(name = "") {
   return name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
@@ -503,6 +506,19 @@ export default function CounterSearch() {
   const [layoutMode, setLayoutMode] = useState("vertical");
   const [verifiedCheck, setVerifiedCheck] = useState(false);
   const [repModalEntity, setRepModalEntity] = useState(null);
+  const [deviceId, setDeviceId] = useState(() => localStorage.getItem("counter_device_id") || "");
+  const [deviceIdInput, setDeviceIdInput] = useState("");
+//   const lastTapTimestamp = useRef(0);
+//   const tabActiveSince = useRef(Date.now() / 1000); // is tab pe aane ka waqt — isse pehle ke scans ignore honge
+//   const [lastTapTimestamp, setLastTapTimestamp] = useState(() => {
+//   const saved = localStorage.getItem("last_processed_tap_timestamp");
+//   return saved ? parseFloat(saved) : 0;
+// });
+const tabActiveSince = useRef(Date.now() / 1000); // is tab pe aane ka waqt — isse pehle ke scans ignore honge
+  const [lastTapTimestamp, setLastTapTimestamp] = useState(() => {
+    const saved = localStorage.getItem("last_processed_tap_timestamp");
+    return saved ? parseFloat(saved) : 0;
+  });
 
 
   const [step, setStep] = useState("select"); // "select" | "confirm"
@@ -515,6 +531,40 @@ export default function CounterSearch() {
   useEffect(() => {
     loadMySummary();
   }, []);
+
+  useEffect(() => {
+    if (!deviceId) return; // device ID set nahi hai to poll hi mat karo
+
+    const interval = setInterval(async () => {
+      try {
+        const taps = await getLatestTaps(deviceId, 1);
+        if (taps.length === 0) return;
+
+        const newest = taps[0]; // latest-first
+        if (newest.timestamp <= lastTapTimestamp) return; // already processed
+        if (newest.timestamp <= tabActiveSince.current) return; // tab pe aane se pehle hua tha, ignore karo
+
+        // lastTapTimestamp.current = newest.timestamp;
+        setLastTapTimestamp(newest.timestamp);
+        localStorage.setItem("last_processed_tap_timestamp", String(newest.timestamp));
+
+        const accessCardNumber = await resolveCredential(newest.access_card_number);
+        if (!accessCardNumber) {
+          showToast("warning", "Unrecognized card", "This card's credential number is not linked to any member.");
+          return;
+        }
+
+        setCardNumber(accessCardNumber);
+        runSearch(accessCardNumber);
+        showToast("info", "Card scanned", `Auto-searching for ${accessCardNumber}`);
+      } catch {
+        // silent — a transient network hiccup shouldn't spam the counter every 2s
+      }
+    }, 2000);
+
+    return () => clearInterval(interval); // page se hatte hi polling band ho jayegi
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceId  , lastTapTimestamp]);
 
   async function loadMySummary() {
     try {
@@ -603,6 +653,33 @@ async function runSearch(card) {
 
   return (
     <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      {!deviceId && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-amber-800">
+            This Counter's Device ID (one-time setup)
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text" value={deviceIdInput} onChange={(e) => setDeviceIdInput(e.target.value)}
+              placeholder="e.g. COUNTER-1"
+              className="flex-1 rounded-lg border border-amber-300 bg-white p-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+            <button
+              onClick={() => {
+                if (!deviceIdInput.trim()) return;
+                localStorage.setItem("counter_device_id", deviceIdInput.trim());
+                setDeviceId(deviceIdInput.trim());
+              }}
+              className="rounded-lg bg-amber-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-amber-700"
+            >
+              Save
+            </button>
+          </div>
+          <p className="mt-1.5 text-[11px] text-amber-700">
+            Match this exactly to the device_id in this PC's config.json for the reader script.
+          </p>
+        </div>
+      )}
       {/* Search bar */}
    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
