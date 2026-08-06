@@ -13,17 +13,15 @@ from .models import KycUser, MembersMaster, KycSubmission
 
 
 
-
 def find_users_by_card(access_card_number):
     """
-    Section 3: resolve card -> ALL matching users rows (may be 1 or many —
-    see multi-entity note above). Returns a list of KycUser, newest-first
-    ordering not guaranteed (table has no reliable order column for this).
+    ...
 
-    Falls back to apps.ballots.models.AuthRepChange when the card doesn't
-    match anything directly: a Super Admin may have assigned a NEW access
-    card number that only exists in that override table, since the live
-    KYC Portal DB itself can't be written to from here.
+    Fallback (added for the card-reader scan flow): some members have no
+    access_code assigned yet in the live KYC data, only a credential_no.
+    For those, resolve_credential() in this file returns their sap_code
+    (customer_code) instead of an access_code, so this function also
+    tries matching directly on sap_code as a last resort.
     """
     direct_matches = list(KycUser.objects.filter(access_code=access_card_number))
     if direct_matches:
@@ -36,9 +34,16 @@ def find_users_by_card(access_card_number):
         .order_by("-changed_at")
         .first()
     )
-    if not override:
-        return []
-    return list(KycUser.objects.filter(sap_code=override.customer_code))
+    if override:
+        return list(KycUser.objects.filter(sap_code=override.customer_code))
+
+    # Last resort: treat the input as a customer_code (sap_code) directly —
+    # covers members who have a credential_no but no access_code yet.
+    customer_code_matches = list(KycUser.objects.filter(sap_code=access_card_number))
+    if customer_code_matches:
+        return customer_code_matches
+
+    return []
 
 
 def get_member_for_user(kyc_user):
@@ -210,15 +215,20 @@ def manual_search(query):
     return results
 
 
-
 def resolve_credential(credential_no):
     """
     Looks up which access_code (Access Card Number) a raw reader
     credential_no belongs to, so an automatic card-scan can be
     resolved into the same identifier manual_search already accepts.
-    Returns the access_code string, or None if not found.
+
+    Fallback: if the matched member has no access_code assigned yet
+    (common for members whose KYC data is incomplete), returns their
+    sap_code (customer_code) instead -- find_users_by_card() has a
+    matching fallback to accept either.
+
+    Returns None if no member is linked to this credential at all.
     """
     user = KycUser.objects.filter(credential_no=credential_no).first()
     if not user:
         return None
-    return user.access_code
+    return user.access_code or user.sap_code
