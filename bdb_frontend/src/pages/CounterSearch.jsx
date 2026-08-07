@@ -506,19 +506,16 @@ export default function CounterSearch() {
   const [layoutMode, setLayoutMode] = useState("vertical");
   const [verifiedCheck, setVerifiedCheck] = useState(false);
   const [repModalEntity, setRepModalEntity] = useState(null);
+  //   // const [deviceId, setDeviceId] = useState(() => localStorage.getItem("counter_device_id") || "");
+  // const [deviceIdInput, setDeviceIdInput] = useState("");
   const [deviceId, setDeviceId] = useState(() => localStorage.getItem("counter_device_id") || "");
   const [deviceIdInput, setDeviceIdInput] = useState("");
-//   const lastTapTimestamp = useRef(0);
-//   const tabActiveSince = useRef(Date.now() / 1000); // is tab pe aane ka waqt — isse pehle ke scans ignore honge
-//   const [lastTapTimestamp, setLastTapTimestamp] = useState(() => {
-//   const saved = localStorage.getItem("last_processed_tap_timestamp");
-//   return saved ? parseFloat(saved) : 0;
-// });
-const tabActiveSince = useRef(Date.now() / 1000); // is tab pe aane ka waqt — isse pehle ke scans ignore honge
+  const [scanModeActive, setScanModeActive] = useState(false);
   const [lastTapTimestamp, setLastTapTimestamp] = useState(() => {
     const saved = localStorage.getItem("last_processed_tap_timestamp");
     return saved ? parseFloat(saved) : 0;
   });
+  const tabActiveSince = useRef(Date.now() / 1000);
 
 
   const [step, setStep] = useState("select"); // "select" | "confirm"
@@ -533,7 +530,8 @@ const tabActiveSince = useRef(Date.now() / 1000); // is tab pe aane ka waqt — 
   }, []);
 
   useEffect(() => {
-    if (!deviceId) return; // device ID set nahi hai to poll hi mat karo
+    // if (!deviceId) return; // device ID set nahi hai to poll hi mat karo
+    if (!deviceId || !scanModeActive) return; // device ID ya scan mode nahi hai to poll hi mat karo
 
     const interval = setInterval(async () => {
       try {
@@ -554,8 +552,12 @@ const tabActiveSince = useRef(Date.now() / 1000); // is tab pe aane ka waqt — 
           return;
         }
 
+        // setCardNumber(accessCardNumber);
+        // runSearch(accessCardNumber);
+        // showToast("info", "Card scanned", `Auto-searching for ${accessCardNumber}`);
         setCardNumber(accessCardNumber);
         runSearch(accessCardNumber);
+        setScanModeActive(false); // scan ho gaya — mode band karo
         showToast("info", "Card scanned", `Auto-searching for ${accessCardNumber}`);
       } catch {
         // silent — a transient network hiccup shouldn't spam the counter every 2s
@@ -564,7 +566,7 @@ const tabActiveSince = useRef(Date.now() / 1000); // is tab pe aane ka waqt — 
 
     return () => clearInterval(interval); // page se hatte hi polling band ho jayegi
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deviceId  , lastTapTimestamp]);
+  }, [deviceId, lastTapTimestamp, scanModeActive]);
 
   async function loadMySummary() {
     try {
@@ -574,7 +576,7 @@ const tabActiveSince = useRef(Date.now() / 1000); // is tab pe aane ka waqt — 
       // Silent fail — balance display is a convenience, not critical.
     }
   }
-async function runSearch(card) {
+  async function runSearch(card) {
     setError("");
     if (!card.trim()) {
       setError("Please enter an access card number to search.");
@@ -627,7 +629,7 @@ async function runSearch(card) {
     setVerifiedCheck(false);
   }
 
- async function handleIssue() {
+  async function handleIssue() {
     if (selected.size === 0 || isArchiveYear) return;
     setSaving(true);
     try {
@@ -681,7 +683,7 @@ async function runSearch(card) {
         </div>
       )}
       {/* Search bar */}
-   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="w-full max-w-xl flex-1 sm:w-auto">
             <label className="mb-1.5 flex items-center space-x-1 text-xs font-bold uppercase tracking-wider text-slate-700">
@@ -704,6 +706,40 @@ async function runSearch(card) {
               </button>
             </form>
           </div>
+          {deviceId && (
+            <button
+              // onClick={() => setScanModeActive((prev) => !prev)}
+              onClick={() => {
+                if (!scanModeActive) {
+                  tabActiveSince.current = Date.now() / 1000;
+                  setResult(null);      // purana data clear
+                  setCardNumber("");    // search box bhi saaf
+                  setSelected(new Set()); // selection bhi clear
+                  setStep("select");    // confirm step pe tha to wapas select pe
+                  setError("");         // koi purani error bhi clear
+                }
+                setScanModeActive((prev) => !prev);
+              }}
+              className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all shadow-sm ${scanModeActive
+                ? "border-emerald-500 bg-emerald-600 text-white"
+                : "border-slate-300 bg-slate-700 text-white hover:bg-slate-800"
+                }`}
+            >
+              {scanModeActive ? (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                  Scanning... (waiting for card)
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h1a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM9 4h1v16H9zm3 0h2v16h-2zm4 0h1a1 1 0 011 1v14a1 1 0 01-1 1h-1z" />
+                  </svg>
+                  Scan Card
+                </>
+              )}
+            </button>
+          )}
           {mySummary.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               {mySummary.map((row) => (
@@ -941,10 +977,10 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
   return (
     <div
       className={`relative flex flex-col justify-between space-y-2.5 rounded-xl border p-3.5 transition-all ${locked
-          ? "stripe-bg border-slate-300 bg-slate-100/90 opacity-80"
-          : blocked
-            ? "border-rose-200 bg-rose-50/60"
-            : "border-blue-200 bg-white shadow-sm hover:border-blue-500 hover:shadow-md"
+        ? "stripe-bg border-slate-300 bg-slate-100/90 opacity-80"
+        : blocked
+          ? "border-rose-200 bg-rose-50/60"
+          : "border-blue-200 bg-white shadow-sm hover:border-blue-500 hover:shadow-md"
         }`}
     >
       <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
@@ -985,16 +1021,16 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
             <span>{(code.entity_name || "?").charAt(0)}</span>
           )}
         </div>
-       <div className="min-w-0 flex-1">
-  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Access Card</div>
-  <div className="mt-0.5 inline-block rounded bg-slate-200/70 px-2 py-0.5 font-mono text-sm font-bold text-slate-900">
-    {code.access_card_number}
-  </div>
-  <div className="mt-1 text-base font-bold text-slate-800">{code.entity_name}</div>
-  <div className="mt-0.5 text-xs font-semibold text-slate-500">
-    Membership No: <span className="font-mono text-slate-700">{code.membership_number || "—"}</span>
-  </div>
-</div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Access Card</div>
+          <div className="mt-0.5 inline-block rounded bg-slate-200/70 px-2 py-0.5 font-mono text-sm font-bold text-slate-900">
+            {code.access_card_number}
+          </div>
+          <div className="mt-1 text-base font-bold text-slate-800">{code.entity_name}</div>
+          <div className="mt-0.5 text-xs font-semibold text-slate-500">
+            Membership No: <span className="font-mono text-slate-700">{code.membership_number || "—"}</span>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-0.5 rounded-lg border border-purple-100 bg-purple-50/60 p-2">
@@ -1038,25 +1074,25 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
       </div>
 
       {code.eligibility_source === "admin_override" && (
-  <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
-    <div className="flex items-center gap-1 text-[11px] font-bold text-amber-800">
-      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <span>On the Spot Payment: {code.voting_eligibility === "eligible" ? "Yes" : "No"}</span>
-    </div>
-    {code.eligibility_remark && (
-      <p className="mt-1 text-[11px] text-amber-900">
-        <span className="font-semibold">Remark:</span> {code.eligibility_remark}
-      </p>
-    )}
-    {code.eligibility_updated_by && (
-      <p className="mt-0.5 text-[11px] text-amber-900">
-        <span className="font-semibold">Given by:</span> {code.eligibility_updated_by}
-      </p>
-    )}
-  </div>
-)}
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-amber-800">
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>On the Spot Payment: {code.voting_eligibility === "eligible" ? "Yes" : "No"}</span>
+          </div>
+          {code.eligibility_remark && (
+            <p className="mt-1 text-[11px] text-amber-900">
+              <span className="font-semibold">Remark:</span> {code.eligibility_remark}
+            </p>
+          )}
+          {code.eligibility_updated_by && (
+            <p className="mt-0.5 text-[11px] text-amber-900">
+              <span className="font-semibold">Given by:</span> {code.eligibility_updated_by}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2 rounded-lg border border-blue-100 bg-blue-50/40 p-2 text-[11px]">
         <div>
