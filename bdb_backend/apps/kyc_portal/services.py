@@ -13,29 +13,118 @@ from .models import KycUser, MembersMaster, KycSubmission
 
 
 
+# def find_users_by_card(access_card_number):
+#     """
+#     ...
+
+#     Fallback (added for the card-reader scan flow): some members have no
+#     access_code assigned yet in the live KYC data, only a credential_no.
+#     For those, resolve_credential() in this file returns their sap_code
+#     (customer_code) instead of an access_code, so this function also
+#     tries matching directly on sap_code as a last resort.
+#     """
+#     direct_matches = list(KycUser.objects.filter(access_code=access_card_number))
+#     if direct_matches:
+#         return direct_matches
+
+#     from apps.ballots.models import AuthRepChange
+
+#     override = (
+#         AuthRepChange.objects.filter(new_access_card_number=access_card_number)
+#         .order_by("-changed_at")
+#         .first()
+#     )
+#     if override:
+#         return list(KycUser.objects.filter(sap_code=override.customer_code))
+
+#     # Last resort: treat the input as a customer_code (sap_code) directly —
+#     # covers members who have a credential_no but no access_code yet.
+
+#     credential_matches = list(KycUser.objects.filter(credential_no=access_card_number))
+#     if credential_matches:
+#         return credential_matches
+
+
+#     customer_code_matches = list(KycUser.objects.filter(sap_code=access_card_number))
+#     if customer_code_matches:
+#         return customer_code_matches
+
+#     return []
+
+
 def find_users_by_card(access_card_number):
     """
-    ...
+    Section 3: resolve card -> ALL matching users rows (may be 1 or many —
+    see multi-entity note above). Returns a list of KycUser, newest-first
+    ordering not guaranteed (table has no reliable order column for this).
 
-    Fallback (added for the card-reader scan flow): some members have no
-    access_code assigned yet in the live KYC data, only a credential_no.
-    For those, resolve_credential() in this file returns their sap_code
-    (customer_code) instead of an access_code, so this function also
-    tries matching directly on sap_code as a last resort.
+    Auth Rep change logic:
+      - If a customer_code has been moved to a NEW access card (via
+        AuthRepChange.new_access_card_number), it is EXCLUDED from the
+        original card's results and only appears under the new card.
+      - This means GEM0001 with C001,C002,C003,C004 where C001 is moved
+        to GEM0002 will return only C002,C003,C004 for GEM0001 and only
+        C001 for GEM0002. No data is deleted — AuthRepChange tracks all
+        history.
     """
-    direct_matches = list(KycUser.objects.filter(access_code=access_card_number))
-    if direct_matches:
-        return direct_matches
-
     from apps.ballots.models import AuthRepChange
 
-    override = (
+    direct_matches = list(KycUser.objects.filter(access_code=access_card_number))
+
+    if direct_matches:
+        # Filter out any customer_codes that have been explicitly moved
+        # to a DIFFERENT access card via AuthRepChange. The latest change
+        # record per customer_code is what counts.
+        moved_away = set()
+        for kyc_user in direct_matches:
+            if not kyc_user.sap_code:
+                continue
+            latest_change = (
+                AuthRepChange.objects.filter(customer_code=kyc_user.sap_code)
+                .order_by("-changed_at")
+                .first()
+            )
+            if (
+                latest_change
+                and latest_change.new_access_card_number
+                and latest_change.new_access_card_number != access_card_number
+            ):
+                # This customer_code has been reassigned to a different card
+                moved_away.add(kyc_user.sap_code)
+
+        filtered = [u for u in direct_matches if u.sap_code not in moved_away]
+
+        # Also add any customer_codes that have been moved TO this card
+        # from a different original card (new card scenario).
+        moved_here = (
+            AuthRepChange.objects.filter(new_access_card_number=access_card_number)
+            .order_by("-changed_at")
+        )
+        # Only take the latest change per customer_code
+        seen_codes = {u.sap_code for u in filtered}
+        for change in moved_here:
+            if change.customer_code not in seen_codes:
+                extra_users = list(KycUser.objects.filter(sap_code=change.customer_code))
+                filtered.extend(extra_users)
+                seen_codes.add(change.customer_code)
+
+        return filtered
+
+    # No direct KYC match — check if any customer_code has been moved
+    # TO this card via AuthRepChange (new card not in KYC DB yet).
+    moved_here = (
         AuthRepChange.objects.filter(new_access_card_number=access_card_number)
         .order_by("-changed_at")
-        .first()
     )
-    if override:
-        return list(KycUser.objects.filter(sap_code=override.customer_code))
+    result = []
+    seen_codes = set()
+    for change in moved_here:
+        if change.customer_code not in seen_codes:
+            extra_users = list(KycUser.objects.filter(sap_code=change.customer_code))
+            result.extend(extra_users)
+            seen_codes.add(change.customer_code)
+    if result:
+        return result
 
     # Last resort: treat the input as a customer_code (sap_code) directly —
     # covers members who have a credential_no but no access_code yet.
@@ -44,7 +133,6 @@ def find_users_by_card(access_card_number):
         return customer_code_matches
 
     return []
-
 
 def get_member_for_user(kyc_user):
     """A KycUser's sap_code matches members_master.customer_code directly."""
@@ -232,3 +320,10 @@ def resolve_credential(credential_no):
     if not user:
         return None
     return user.access_code or user.sap_code
+
+def find_users_by_credential(credential_no):
+    """
+    Returns ALL KycUser rows linked to this credential_no directly.
+    Used by card-reader scan flow — no access_code involved at all.
+    """
+    return list(KycUser.objects.filter(credential_no=credential_no))

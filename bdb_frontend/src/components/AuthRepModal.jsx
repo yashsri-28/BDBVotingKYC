@@ -156,6 +156,14 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
       setError("Please enter the Nominee Voter name.");
       return;
     }
+    if (!newCard.trim()) {
+      setError("Please enter the New Access Card No.");
+      return;
+    }
+    if (!newPhoto) {
+      setError("Please upload the Nominee Profile Photo.");
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -228,11 +236,11 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
           />
         </div>
 
-        <div>
-          <label className="mb-1 block font-bold text-slate-700">New Access Card No.</label>
+       <div>
+          <label className="mb-1 block font-bold text-slate-700">New Access Card No. *</label>
           <input
             type="text" value={newCard} onChange={(e) => setNewCard(e.target.value)}
-            placeholder="Leave blank to keep the current card"
+            placeholder="e.g. GEM00001"
             className="w-full rounded-lg border border-slate-300 bg-white p-2 font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
@@ -243,8 +251,8 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
             type="file" accept="image/*" onChange={(e) => setNewPhoto(e.target.files?.[0] || null)}
             className="w-full rounded-lg border border-slate-300 bg-slate-50 p-1.5 text-slate-600"
           />
-          <p className="mt-1 text-[10px] text-slate-400">
-            This photo will replace the representative's photo shown to Counters, overriding the KYC record.
+          <p className="mt-1 text-[10px] text-rose-500 font-semibold">
+            Required. This photo will replace the representative's photo shown to Counters.
           </p>
         </div>
 

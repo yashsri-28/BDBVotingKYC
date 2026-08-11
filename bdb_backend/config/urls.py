@@ -141,9 +141,12 @@ urlpatterns = [
 
 @require_GET
 def serve_kyc_media(request, path):
+    # Normalize forward slashes to OS separator (fixes Windows path mismatch)
+    path = path.replace("/", os.sep)
+    
     candidates = [
         os.path.join(settings.KYC_MEDIA_ROOT, path),
-        os.path.join(settings.MEDIA_ROOT, path),  # our own uploads: auth_rep_photos/, auth_rep_documents/
+        os.path.join(settings.MEDIA_ROOT, path),
     ]
     parts = path.rsplit("/", 1)
     if len(parts) == 2:

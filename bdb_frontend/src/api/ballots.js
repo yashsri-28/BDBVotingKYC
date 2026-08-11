@@ -75,18 +75,22 @@
 import { api } from "./client";
 
 // --- Access-card search & allotment (Counter Search screen) ---
-export async function searchAccessCard(accessCardNumber) {
-  const { data } = await api.post("/ballots/allotment/search/", { access_card_number: accessCardNumber });
-  return data;
-}
-
-export async function allotCustomerCodes(accessCardNumber, customerCodes) {
-  const { data } = await api.post("/ballots/allotment/allot/", {
-    access_card_number: accessCardNumber, customer_codes: customerCodes,
+export async function searchAccessCard(accessCardNumber, credentialNo = null) {
+  const { data } = await api.post("/ballots/allotment/search/", {
+    access_card_number: accessCardNumber || "",
+    ...(credentialNo && { credential_no: credentialNo }),
   });
   return data;
 }
 
+export async function allotCustomerCodes(accessCardNumber, customerCodes, credentialNo = null) {
+  const { data } = await api.post("/ballots/allotment/allot/", {
+    access_card_number: accessCardNumber,
+    customer_codes: customerCodes,
+    ...(credentialNo && { credential_no: credentialNo }),
+  });
+  return data;
+}
 // --- Pools & allocation (Super Admin) ---
 export async function fetchPools() {
   const { data } = await api.get("/ballots/pools/");

@@ -23,7 +23,12 @@ class BallotPoolSerializer(serializers.ModelSerializer):
         model = BallotPool
         fields = ["id", "roll_type", "total_ballots", "allocated_total", "unallocated", "updated_at"]
 
+class AllotCodesRequestSerializer(serializers.Serializer):
+    access_card_number = serializers.CharField(required=False, allow_blank=True, default="")
+    customer_codes = serializers.ListField(child=serializers.CharField())
+    credential_no = serializers.CharField(required=False, allow_blank=True, default=None)
 
+    
 class SetPoolTotalSerializer(serializers.Serializer):
     roll_type = serializers.ChoiceField(choices=["category", "exclusive"])
     total_ballots = serializers.IntegerField(min_value=0)
@@ -109,7 +114,11 @@ class CustomerCodeAllotmentSerializer(serializers.ModelSerializer):
             "voting_eligibility_source", "eligibility_remark_at_allotment",
         ]
 
+class AllotmentSearchRequestSerializer(serializers.Serializer):
+    access_card_number = serializers.CharField(required=False, allow_blank=True, default="")
+    credential_no = serializers.CharField(required=False, allow_blank=True, default=None)
 
+    
 class AuthRepChangeSerializer(serializers.ModelSerializer):
     changed_by_username = serializers.CharField(source="changed_by.username", read_only=True, default=None)
 

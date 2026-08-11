@@ -48,7 +48,7 @@ export default function Login() {
 </div>
 
           <h1 className="text-xl font-extrabold tracking-tight text-slate-900">BDB Voting</h1>
-          <p className="text-xs text-slate-500">Sign in to access elections management &amp; ballot allotments</p>
+          <p className="text-xs text-slate-500">Sign in to access elections management</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">

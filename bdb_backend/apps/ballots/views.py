@@ -189,8 +189,13 @@ class AllotmentSearchView(APIView):
         serializer = AllotmentSearchRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
+            # result = allotment_services.search_access_card(
+            #     serializer.validated_data["access_card_number"], actor=request.user
+            # )
             result = allotment_services.search_access_card(
-                serializer.validated_data["access_card_number"], actor=request.user
+                serializer.validated_data["access_card_number"],
+                actor=request.user,
+                credential_no=serializer.validated_data.get("credential_no"),
             )
         except allotment_services.AllotmentError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_404_NOT_FOUND)
@@ -208,11 +213,18 @@ class AllotCodesView(APIView):
     def post(self, request):
         serializer = AllotCodesRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        # try:
+        #     created = allotment_services.allot_customer_codes(
+        #         serializer.validated_data["access_card_number"],
+        #         serializer.validated_data["customer_codes"],
+        #         actor=request.user,
+        #     )
         try:
             created = allotment_services.allot_customer_codes(
                 serializer.validated_data["access_card_number"],
                 serializer.validated_data["customer_codes"],
                 actor=request.user,
+                credential_no=serializer.validated_data.get("credential_no"),
             )
         except allotment_services.AllotmentError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
