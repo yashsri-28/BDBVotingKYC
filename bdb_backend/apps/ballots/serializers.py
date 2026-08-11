@@ -28,7 +28,7 @@ class AllotCodesRequestSerializer(serializers.Serializer):
     customer_codes = serializers.ListField(child=serializers.CharField())
     credential_no = serializers.CharField(required=False, allow_blank=True, default=None)
 
-    
+
 class SetPoolTotalSerializer(serializers.Serializer):
     roll_type = serializers.ChoiceField(choices=["category", "exclusive"])
     total_ballots = serializers.IntegerField(min_value=0)
@@ -97,9 +97,6 @@ class AllotmentSearchRequestSerializer(serializers.Serializer):
     access_card_number = serializers.CharField(max_length=50)
 
 
-class AllotCodesRequestSerializer(serializers.Serializer):
-    access_card_number = serializers.CharField(max_length=50)
-    customer_codes = serializers.ListField(child=serializers.CharField(max_length=50), allow_empty=False)
 
 
 class CustomerCodeAllotmentSerializer(serializers.ModelSerializer):
