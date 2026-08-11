@@ -221,7 +221,7 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
         </div>
 
         <div>
-          <label className="mb-1 block font-bold text-slate-700">Nominee Voter Name</label>
+          <label className="mb-1 block font-bold text-slate-700">Nominee Voter Name *</label>
           <input
             type="text" required value={newName} onChange={(e) => setNewName(e.target.value)}
             className="w-full rounded-lg border border-slate-300 bg-white p-2 font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -238,7 +238,7 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
         </div>
 
         <div>
-          <label className="mb-1 block font-bold text-slate-700">New Representative Photo (optional)</label>
+          <label className="mb-1 block font-bold text-slate-700">Nominee Profile Photo. *</label>
           <input
             type="file" accept="image/*" onChange={(e) => setNewPhoto(e.target.files?.[0] || null)}
             className="w-full rounded-lg border border-slate-300 bg-slate-50 p-1.5 text-slate-600"
