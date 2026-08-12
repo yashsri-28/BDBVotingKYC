@@ -138,11 +138,12 @@ export async function fetchAllotments(filters = {}) {
 }
 
 // --- Authorized Representative change ---
-export async function changeAuthRep({ customerCode, newRepresentativeName, newAccessCardNumber, newPhoto, attachment }) {
+export async function changeAuthRep({ customerCode, newRepresentativeName, newAccessCardNumber, newPhoto, attachment , newCredentialNo }) {
   const form = new FormData();
   form.append("customer_code", customerCode);
   form.append("new_representative_name", newRepresentativeName);
   if (newAccessCardNumber) form.append("new_access_card_number", newAccessCardNumber);
+  if (newCredentialNo) form.append("new_credential_no", newCredentialNo);
   if (newPhoto) form.append("new_photo", newPhoto);
   if (attachment) form.append("attachment", attachment);
   const { data } = await api.post("/ballots/auth-rep-change/", form, {

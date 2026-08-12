@@ -142,6 +142,7 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
       setNewCard("");
       setNewPhoto(null);
       setAttachment(null);
+      setNewCredentialNo("");
       setError("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -176,6 +177,7 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
         customerCode: selectedCode,
         newRepresentativeName: newName.trim(),
         newAccessCardNumber: newCard.trim() || undefined,
+        newCredentialNo: newCredentialNo.trim(),
         newPhoto,
         attachment,
       });
