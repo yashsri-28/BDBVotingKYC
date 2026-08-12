@@ -1261,7 +1261,7 @@ export default function CounterSearch() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [layoutMode, setLayoutMode] = useState("vertical");
+  const [layoutMode, setLayoutMode] = useState("grid");
   const [verifiedCheck, setVerifiedCheck] = useState(false);
   const [repModalEntity, setRepModalEntity] = useState(null);
   const [deviceId, setDeviceId] = useState(() => localStorage.getItem("counter_device_id") || "");
@@ -1382,7 +1382,7 @@ async function handleIssue() {
   const selectedCodesList = result?.customer_codes.filter((c) => selected.has(c.customer_code)) || [];
   const categoryCount = selectedCodesList.filter((c) => c.roll_type === "category").length;
   const exclusiveCount = selectedCodesList.filter((c) => c.roll_type === "exclusive").length;
-  const womenCount = selectedCodesList.filter((c) => c.roll_type === "women").length;
+  // const womenCount = selectedCodesList.filter((c) => c.roll_type === "women").length;
 
   return (
     <div className="mx-auto space-y-4 px-4 py-6 sm:px-6 lg:px-8">
@@ -1556,7 +1556,7 @@ async function handleIssue() {
                 <div className="p-5">
                   <div className="space-y-4">
                     <h4 className="text-sm font-bold text-slate-800">Confirm Ballot Allotment</h4>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-center">
                         <div className="text-[10px] font-bold uppercase tracking-wide text-purple-700">Category</div>
                         <div className="mt-1 text-3xl font-black text-purple-900">{categoryCount}</div>
@@ -1565,12 +1565,12 @@ async function handleIssue() {
                         <div className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Exclusive</div>
                         <div className="mt-1 text-3xl font-black text-amber-900">{exclusiveCount}</div>
                       </div>
-                      <div className="rounded-xl border border-pink-200 bg-pink-50 p-4 text-center">
+                      {/* <div className="rounded-xl border border-pink-200 bg-pink-50 p-4 text-center">
                         <div className="text-[10px] font-bold uppercase tracking-wide text-pink-700">Women</div>
                         <div className="mt-1 text-3xl font-black text-pink-900">{womenCount}</div>
-                      </div>
+                      </div> */}
                     </div>
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    {/* <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                       <div className="mb-2 text-xs font-bold text-slate-600">Customer codes to be allotted:</div>
                       <ul className="space-y-1">
                         {selectedCodesList.map((c) => (
@@ -1579,6 +1579,25 @@ async function handleIssue() {
                             <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
                               c.roll_type === "category" ? "bg-purple-100 text-purple-800"
                               : c.roll_type === "women" ? "bg-pink-100 text-pink-800"
+                              : "bg-amber-100 text-amber-800"}`}>
+                              {c.roll_type}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div> */}
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                      <div className="mb-2 text-xs font-bold text-slate-600">Customer codes to be allotted:</div>
+                      <ul className="divide-y divide-slate-100">
+                        {selectedCodesList.map((c) => (
+                          <li key={c.customer_code} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
+                            <div className="min-w-0 flex-1">
+                              <span className="font-mono text-xs font-bold text-slate-800">{c.customer_code}</span>
+                              <span className="mx-1.5 text-slate-400">—</span>
+                              <span className="text-xs text-slate-600 truncate">{c.entity_name}</span>
+                            </div>
+                            <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                              c.roll_type === "category" ? "bg-purple-100 text-purple-800"
                               : "bg-amber-100 text-amber-800"}`}>
                               {c.roll_type}
                             </span>
@@ -1601,7 +1620,7 @@ async function handleIssue() {
                       <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5">
                         <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5">Cat: {categoryCount}</span>
                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Exc: {exclusiveCount}</span>
-                        {womenCount > 0 && <span className="text-[10px] font-bold text-pink-700 bg-pink-50 border border-pink-200 rounded px-1.5 py-0.5">Women: {womenCount}</span>}
+                        {/* {womenCount > 0 && <span className="text-[10px] font-bold text-pink-700 bg-pink-50 border border-pink-200 rounded px-1.5 py-0.5">Women: {womenCount}</span>} */}
                         <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5">Total: {selected.size}</span>
                       </div>
                     )}
@@ -1622,7 +1641,9 @@ async function handleIssue() {
               {step === "confirm" && (
                 <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3">
                   <div className="text-xs font-medium text-slate-600">
-                    Total: <span className="font-mono font-bold text-blue-700">{categoryCount} Cat + {exclusiveCount} Exc + {womenCount} Women = {selected.size} ballots</span>
+                    {/* Total: <span className="font-mono font-bold text-blue-700">{categoryCount} Cat + {exclusiveCount} Exc + {womenCount} Women = {selected.size} ballots</span> */}
+                    Total: <span className="font-mono font-bold text-blue-700">{categoryCount} Cat + {exclusiveCount} Exc = {selected.size} ballots</span>
+
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => setStep("select")}
@@ -1652,10 +1673,10 @@ async function handleIssue() {
                   <span className="text-xs font-bold text-amber-700">Exclusive</span>
                   <span className="text-lg font-black text-amber-900">{exclusiveCount}</span>
                 </div>
-                <div className="flex items-center justify-between rounded-lg bg-pink-50 border border-pink-200 px-3 py-2">
+                {/* <div className="flex items-center justify-between rounded-lg bg-pink-50 border border-pink-200 px-3 py-2">
                   <span className="text-xs font-bold text-pink-700">Women</span>
                   <span className="text-lg font-black text-pink-900">{womenCount}</span>
-                </div>
+                </div> */}
                 <div className="flex items-center justify-between rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
                   <span className="text-xs font-bold text-blue-700">Total</span>
                   <span className="text-lg font-black text-blue-900">{selected.size}</span>
@@ -1726,7 +1747,7 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
     if (!rollType) return null;
     if (rollType === "category") return "Category pool";
     if (rollType === "exclusive") return "Exclusive pool";
-    if (rollType === "women") return "Women pool";
+    // if (rollType === "women") return "Women pool";
     return rollType;
   }
 
@@ -1834,7 +1855,7 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
         <div className="mx-3.5 mb-2.5">
           <span className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${
             code.roll_type === "category" ? "border-purple-200 bg-purple-50 text-purple-800"
-            : code.roll_type === "women" ? "border-pink-200 bg-pink-50 text-pink-800"
+            // : code.roll_type === "women" ? "border-pink-200 bg-pink-50 text-pink-800"
             : "border-amber-200 bg-amber-50 text-amber-800"}`}>
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
