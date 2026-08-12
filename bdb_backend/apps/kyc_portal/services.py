@@ -324,6 +324,28 @@ def resolve_credential(credential_no):
 def find_users_by_credential(credential_no):
     """
     Returns ALL KycUser rows linked to this credential_no directly.
-    Used by card-reader scan flow — no access_code involved at all.
+    Also checks AuthRepChange.new_credential_no — if a Super Admin has
+    assigned a new card (with a new credential_no) to a customer_code,
+    that override is respected here too, so the new card's scan finds
+    the correct member even before KYC DB is updated.
     """
-    return list(KycUser.objects.filter(credential_no=credential_no))
+    # Direct KYC DB match first
+    direct = list(KycUser.objects.filter(credential_no=credential_no))
+    if direct:
+        return direct
+
+    # Fallback: check if this credential_no was assigned via AuthRepChange
+    from apps.ballots.models import AuthRepChange
+    overrides = (
+        AuthRepChange.objects
+        .filter(new_credential_no=credential_no)
+        .order_by("-changed_at")
+    )
+    result = []
+    seen = set()
+    for override in overrides:
+        if override.customer_code not in seen:
+            users = list(KycUser.objects.filter(sap_code=override.customer_code))
+            result.extend(users)
+            seen.add(override.customer_code)
+    return result
