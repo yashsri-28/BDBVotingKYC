@@ -41,3 +41,24 @@ html, body {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+
+
+button{
+  cursor: pointer !important;
+}
+
+
+
+
+
+select:focus,
+select:focus-visible,
+input:focus,
+input:focus-visible,
+button:focus,
+button:focus-visible {
+  outline: none !important;
+  /* box-shadow: none !important; */
+}

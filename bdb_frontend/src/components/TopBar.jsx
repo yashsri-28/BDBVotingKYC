@@ -249,8 +249,10 @@ export default function TopBar() {
             </div>
 
             <div className="hidden items-center space-x-4 lg:flex">
-              <div className="flex items-center rounded-lg border border-blue-600 bg-blue-700 p-1">
-                <span className="flex items-center space-x-1 px-2 text-xs font-medium text-blue-50">
+              <div className="flex items-center rounded-lg border border-blue-100 bg-blue-50 p-1">
+              {/* <div className="flex items-center rounded-lg border border-blue-200 bg-blue-50 p-1"> */}
+                <span className="flex items-center space-x-1 px-2 text-xs font-semibold text-[#083d77]">
+                {/* <span className="flex items-center space-x-1 px-2 text-xs font-medium text-blue-700"> */}
                   <svg className="h-3.5 w-3.5 text-blue-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
@@ -259,7 +261,7 @@ export default function TopBar() {
                 <select
                   value={year}
                   onChange={handleYearChange}
-                  className="rounded border border-blue-700 bg-blue-800 px-2.5 py-1 text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="rounded-md border border-blue-200 bg-white px-2.5 py-1 text-xs font-bold text-[#083d77] outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
                 >
                   {FY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
@@ -268,18 +270,19 @@ export default function TopBar() {
 
             <div className="flex items-center space-x-3">
               <div className="hidden text-right sm:block">
-                <div className="text-xs font-bold text-slate-700">{user?.full_name || user?.username}</div>
+                {/* <div className="text-xs font-bold text-slate-700">{user?.full_name || user?.username}</div> */}
                 <div className="flex items-center justify-end space-x-1 text-[10px] font-semibold text-blue-800">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-900" />
-                  <span>{ROLE_LABELS[user?.role] || user?.role}</span>
+                  {/* <span>{ROLE_LABELS[user?.role] || user?.role}</span> */}
+                  <div className="text-xs font-bold text-slate-700">{user?.full_name || user?.username}</div>
                 </div>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-700 text-sm font-bold text-blue-50">
+              {/* <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-700 text-sm font-bold text-blue-50">
                 {ROLE_INITIALS[user?.role] || "U"}
-              </div>
+              </div> */}
               <button
                 onClick={handleSignOut}
-                className="ml-2 flex items-center space-x-1.5 rounded-lg border border-blue-600 bg-blue-700 px-3 py-1.5 text-xs font-bold text-blue-50 transition-all hover:bg-rose-900/80 hover:text-rose-200"
+                className="ml-2 flex items-center space-x-1.5 rounded-lg border border-blue-600 bg-blue-700 px-3 py-1.5 text-xs font-bold text-blue-50 transition-all hover:bg-rose-50 hover:text-rose-700 hover:border-rose-700"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

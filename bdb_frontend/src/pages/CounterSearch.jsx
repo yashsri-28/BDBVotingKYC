@@ -2164,9 +2164,17 @@ export default function CounterSearch() {
                       </svg>
                       Customer Codes Ballot Allotment
                     </h3>
+<div className="flex items-center gap-4 ml-6">
                     <p className="mt-0.5 text-xs text-slate-300">
-                      Access Card: <strong className="font-mono text-blue-300">{result.access_card_number}</strong>
+                      Access Card: <strong className="font-mono text-blue-200">{result.access_card_number}</strong>
                     </p>
+                      {step === "select" && (
+                  <div className="text-xs font-medium text-slate-300">
+                    Selected: <span className="font-mono font-semibold text-blue-200">&nbsp;{selected.size}/{pendingCount}</span>
+                  </div>
+                      )}
+                  </div>
+
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center rounded-lg border border-slate-700 bg-slate-800 p-0.5">
@@ -2245,35 +2253,11 @@ export default function CounterSearch() {
               )}
 
               {/* Footer select */}
-              {step === "select" && (
-                <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
+              {/* {step === "select" && (
                   <div className="text-xs font-medium text-slate-600">
                     Selected: <span className="font-mono font-bold text-blue-700">{selected.size} / {pendingCount}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {selected.size > 0 && (
-                      <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1">
-                        <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5">Cat: {categoryCount}</span>
-                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Exc: {exclusiveCount}</span>
-                        <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5">Total: {selected.size}</span>
-                      </div>
-                    )}
-                    <button onClick={clearSelection}
-                      className="rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-300">
-                      Clear
-                    </button>
-                    <button
-                      onClick={() => setStep("confirm")}
-                      disabled={selected.size === 0 || isArchiveYear}
-                      className={`rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${
-                        selected.size > 0 && !isArchiveYear
-                          ? "bg-blue-600 text-white hover:bg-blue-700"
-                          : "cursor-not-allowed bg-slate-300 text-slate-500"}`}>
-                      Photo Verified ({selected.size} selected)
-                    </button>
-                  </div>
-                </div>
-              )}
+              )} */}
 
               {/* Footer confirm */}
               {step === "confirm" && (
@@ -2313,11 +2297,27 @@ export default function CounterSearch() {
                   <span className="text-xs font-bold text-blue-700">Total</span>
                   <span className="text-lg font-black text-blue-900">{selected.size}</span>
                 </div>
+                <div className="flex items-center gap-2">
+                   <button onClick={clearSelection}
+                      className="rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-300">
+                      Clear
+                    </button>
+                    <button
+                      onClick={() => setStep("confirm")}
+                      disabled={selected.size === 0 || isArchiveYear}
+                      className={`whitespace-nowrap rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${
+                        selected.size > 0 && !isArchiveYear
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "cursor-not-allowed bg-slate-300 text-slate-500"}`}>
+                      Photo Verified 
+                      {/* ({selected.size} selected) */}
+                    </button>
+              </div>
               </div>
             </div>
 
             {/* On the spot payment */}
-            {selectedCodesList.some((c) => c.eligibility_source === "admin_override") && (
+            {/* {selectedCodesList.some((c) => c.eligibility_source === "admin_override") && (
               <div className="rounded-xl border border-amber-300 bg-amber-50 p-3">
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-amber-800">On the spot payment</p>
                 {selectedCodesList.filter((c) => c.eligibility_source === "admin_override").map((c) => (
@@ -2328,7 +2328,7 @@ export default function CounterSearch() {
                   </div>
                 ))}
               </div>
-            )}
+            )} */}
 
             {/* Not eligible */}
             {result.customer_codes.some((c) => !c.selectable && !c.already_allotted) && (
@@ -2465,19 +2465,9 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
         </div>
       </div>
 
-      {/* On the spot payment */}
-      {code.eligibility_source === "admin_override" && (
-        <div className="mx-3 mb-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5">
-          <p className="text-[11px] font-bold text-amber-800">
-            On the spot payment: {code.voting_eligibility === "eligible" ? "Yes" : "No"}
-          </p>
-          {code.eligibility_remark && <p className="text-[11px] text-amber-700">Remark: {code.eligibility_remark}</p>}
-          {code.eligibility_updated_by && <p className="text-[11px] text-amber-600">By: {code.eligibility_updated_by}</p>}
-        </div>
-      )}
 
-      {/* Pool type */}
-      {code.roll_type && (
+
+       {code.roll_type && (
         <div className="mx-3 mb-2">
           <span className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${
             code.roll_type === "category" ? "border-purple-200 bg-purple-50 text-purple-800"
@@ -2490,6 +2480,33 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
           </span>
         </div>
       )}
+
+
+      {/* On the spot payment */}
+      {code.eligibility_source === "admin_override" && (
+        <div className="mx-3 mb-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 flex gap-2 items-center">
+          <p className="text-[11px] font-bold text-amber-800">
+            On the spot payment: {code.voting_eligibility === "eligible" ? "Yes" : "No"}
+          </p>
+          {code.eligibility_remark && <p className="text-[11px] text-amber-700">Remark: {code.eligibility_remark}</p>}
+          {code.eligibility_updated_by && <p className="text-[11px] text-amber-600">By: {code.eligibility_updated_by}</p>}
+        </div>
+      )}
+
+      {/* Pool type */}
+      {/* {code.roll_type && (
+        <div className="mx-3 mb-2">
+          <span className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${
+            code.roll_type === "category" ? "border-purple-200 bg-purple-50 text-purple-800"
+            : code.roll_type === "women" ? "border-pink-200 bg-pink-50 text-pink-800"
+            : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            </svg>
+            {formatPool(code.roll_type)}
+          </span>
+        </div>
+      )} */}
 
       {/* Footer */}
       {locked ? (

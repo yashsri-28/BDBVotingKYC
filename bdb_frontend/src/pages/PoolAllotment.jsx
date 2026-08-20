@@ -1882,9 +1882,9 @@ export default function PoolAllotment() {
                 onChange={(e) => setAllocationAdjustForm((f) => ({ ...f, category: e.target.value }))}
                 className="w-full rounded-lg border border-slate-300 p-2 font-mono text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white" />
               <button type="button" disabled={adjusting} onClick={() => handleAdjustAllocation("category", 1)}
-                className="shrink-0 rounded-lg bg-emerald-600 px-2.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 active:scale-95 disabled:opacity-60 shadow-sm">+</button>
+                className="shrink-0 rounded-lg bg-[#48A04C] px-2.5 py-2 text-xs font-bold text-white hover:bg-[#369033] active:scale-95 disabled:opacity-60 shadow-sm">+</button>
               <button type="button" disabled={adjusting} onClick={() => handleAdjustAllocation("category", -1)}
-                className="shrink-0 rounded-lg bg-rose-600 px-2.5 py-2 text-xs font-bold text-white hover:bg-rose-700 active:scale-95 disabled:opacity-60 shadow-sm">−</button>
+                className="shrink-0 rounded-lg bg-red-500 px-2.5 py-2 text-xs font-bold text-white hover:bg-orange-700 active:scale-95 disabled:opacity-60 shadow-sm">−</button>
             </div>
           </div>
           <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3">
@@ -1894,9 +1894,9 @@ export default function PoolAllotment() {
                 onChange={(e) => setAllocationAdjustForm((f) => ({ ...f, exclusive: e.target.value }))}
                 className="w-full rounded-lg border border-slate-300 p-2 font-mono text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white" />
               <button type="button" disabled={adjusting} onClick={() => handleAdjustAllocation("exclusive", 1)}
-                className="shrink-0 rounded-lg bg-emerald-600 px-2.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 active:scale-95 disabled:opacity-60 shadow-sm">+</button>
+                className="shrink-0 rounded-lg bg-[#48A04C] px-2.5 py-2 text-xs font-bold text-white hover:bg-[#369033] active:scale-95 disabled:opacity-60 shadow-sm">+</button>
               <button type="button" disabled={adjusting} onClick={() => handleAdjustAllocation("exclusive", -1)}
-                className="shrink-0 rounded-lg bg-rose-600 px-2.5 py-2 text-xs font-bold text-white hover:bg-rose-700 active:scale-95 disabled:opacity-60 shadow-sm">−</button>
+                className="shrink-0 rounded-lg bg-red-500 px-2.5 py-2 text-xs font-bold text-white hover:bg-orange-700 active:scale-95 disabled:opacity-60 shadow-sm">−</button>
             </div>
           </div>
         </div>
