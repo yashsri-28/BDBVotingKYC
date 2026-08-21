@@ -321,10 +321,45 @@ def resolve_credential(credential_no):
         return None
     return user.access_code or user.sap_code
 
+# def find_users_by_credential(credential_no):
+#     """
+#     Returns ALL KycUser rows linked to this credential_no directly.
+#     Also checks AuthRepChange.new_credential_no — if a Super Admin has
+#     assigned a new card (with a new credential_no) to a customer_code,
+#     that override is respected here too, so the new card's scan finds
+#     the correct member even before KYC DB is updated.
+#     """
+#     # Direct KYC DB match first
+#     direct = list(KycUser.objects.filter(credential_no=credential_no))
+#     if direct:
+#         return direct
+
+#     # Fallback: check if this credential_no was assigned via AuthRepChange
+#     from apps.ballots.models import AuthRepChange
+#     overrides = (
+#         AuthRepChange.objects
+#         .filter(new_credential_no=credential_no)
+#         .order_by("-changed_at")
+#     )
+#     result = []
+#     seen = set()
+#     for override in overrides:
+#         if override.customer_code not in seen:
+#             users = list(KycUser.objects.filter(sap_code=override.customer_code))
+#             result.extend(users)
+#             seen.add(override.customer_code)
+#     return result
+
+
+
 def find_users_by_credential(credential_no):
     """
-    Returns ALL KycUser rows linked to this credential_no directly.
-    Used by card-reader scan flow — no access_code involved at all.
+    Returns ALL KycUser rows linked to this credential_no.
+    Combines:
+    1. Direct KYC DB match (credential_no column)
+    2. AuthRepChange.new_credential_no match — members whose rep was
+       changed and assigned this credential_no by Super Admin
+    Both are always checked and merged, so no member is missed.
     """
     return list(KycUser.objects.filter(credential_no=credential_no))
 
@@ -361,3 +396,25 @@ def get_all_members(search=None, page=1, page_size=25):
         "previous": page_obj.has_previous(),
         "total_pages": paginator.num_pages,
     }
+    from apps.ballots.models import AuthRepChange
+
+    # Direct KYC DB match
+    direct = list(KycUser.objects.filter(credential_no=credential_no))
+    seen = {u.sap_code for u in direct}
+    result = list(direct)
+
+    # ALWAYS also check AuthRepChange — even if direct match found,
+    # there may be additional members assigned to this credential_no
+    # by Super Admin via auth rep change.
+    overrides = (
+        AuthRepChange.objects
+        .filter(new_credential_no=credential_no)
+        .order_by("-changed_at")
+    )
+    for override in overrides:
+        if override.customer_code not in seen:
+            users = list(KycUser.objects.filter(sap_code=override.customer_code))
+            result.extend(users)
+            seen.add(override.customer_code)
+
+    return result

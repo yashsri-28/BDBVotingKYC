@@ -1233,6 +1233,687 @@
 //       </div>
 //     </div>
 //   );
+// // }
+
+
+
+// import { useState, useEffect, useRef } from "react";
+// import { searchAccessCard, allotCustomerCodes } from "../api/ballots";
+// import { getErrorMessage } from "../api/client";
+// import { useToast } from "../context/ToastContext";
+// import { useAuth } from "../context/AuthContext";
+// import AuthRepModal from "../components/AuthRepModal";
+// import { mediaUrl } from "../api/client";
+// import { fetchMySummary } from "../api/ballots";
+// import { getLatestTaps } from "../api/sipass";
+
+// function initials(name = "") {
+//   return name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+// }
+
+// export default function CounterSearch() {
+//   const { showToast } = useToast();
+//   const [lastCredentialNo, setLastCredentialNo] = useState(null);
+//   const { user } = useAuth();
+//   const [cardNumber, setCardNumber] = useState("");
+//   const [result, setResult] = useState(null);
+//   const [selected, setSelected] = useState(new Set());
+//   const [loading, setLoading] = useState(false);
+//   const [saving, setSaving] = useState(false);
+//   const [error, setError] = useState("");
+//   const [layoutMode, setLayoutMode] = useState("grid");
+//   const [verifiedCheck, setVerifiedCheck] = useState(false);
+//   const [repModalEntity, setRepModalEntity] = useState(null);
+//   const [deviceId, setDeviceId] = useState(() => localStorage.getItem("counter_device_id") || "");
+//   const [deviceIdInput, setDeviceIdInput] = useState("");
+//   const [scanModeActive, setScanModeActive] = useState(false);
+//   const [lastTapTimestamp, setLastTapTimestamp] = useState(() => {
+//     const saved = localStorage.getItem("last_processed_tap_timestamp");
+//     return saved ? parseFloat(saved) : 0;
+//   });
+//   const tabActiveSince = useRef(Date.now() / 1000);
+//   const [step, setStep] = useState("select");
+//   const [mySummary, setMySummary] = useState([]);
+
+//   const isArchiveYear = false;
+//   const canEditAuthRep = user?.role === "admin";
+
+//   useEffect(() => { loadMySummary(); }, []);
+
+//   useEffect(() => {
+//     if (!deviceId || !scanModeActive) return;
+//     const interval = setInterval(async () => {
+//       try {
+//         const taps = await getLatestTaps(deviceId, 1);
+//         if (taps.length === 0) return;
+//         const newest = taps[0];
+//         if (newest.timestamp <= lastTapTimestamp) return;
+//         if (newest.timestamp <= tabActiveSince.current) return;
+//         setLastTapTimestamp(newest.timestamp);
+//         localStorage.setItem("last_processed_tap_timestamp", String(newest.timestamp));
+//         const credentialNo = newest.access_card_number;
+//         setCardNumber(credentialNo);
+//         runSearch("", credentialNo);
+//         setScanModeActive(false);
+//         showToast("info", "Card scanned", `Credential: ${credentialNo}`);
+//       } catch { }
+//     }, 2000);
+//     return () => clearInterval(interval);
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [deviceId, lastTapTimestamp, scanModeActive]);
+
+//   async function loadMySummary() {
+//     try {
+//       const data = await fetchMySummary();
+//       setMySummary(data);
+//     } catch { }
+//   }
+
+//   async function runSearch(card, credentialNo = null) {
+//     setError("");
+//     if (!credentialNo && !card.trim()) {
+//       setError("Please enter an access card number to search.");
+//       return;
+//     }
+//     setLastCredentialNo(credentialNo); // <-- ye add kar
+//     setLoading(true);
+//     try {
+//       const data = await searchAccessCard(card.trim(), credentialNo);
+//       setResult(data);
+//       setSelected(new Set(data.customer_codes.filter((c) => c.default_selected).map((c) => c.customer_code)));
+//       setVerifiedCheck(false);
+//       setStep("select");
+//       showToast("success", "Member record found", `Loaded ${data.customer_codes.length} customer code(s).`);
+//     } catch (err) {
+//       setResult(null);
+//       const msg = getErrorMessage(err, "That access card could not be found.");
+//       setError(msg);
+//       showToast("danger", "Record not found", msg);
+//     } finally {
+//       setLoading(false);
+//     }
+//   }
+
+//   function handleSearchSubmit(e) {
+//     e.preventDefault();
+//     runSearch(cardNumber);
+//   }
+
+//   function toggleCode(code) {
+//     setSelected((prev) => {
+//       const next = new Set(prev);
+//       next.has(code) ? next.delete(code) : next.add(code);
+//       return next;
+//     });
+//   }
+
+//   function clearSelection() {
+//     setSelected(new Set());
+//     setVerifiedCheck(false);
+//   }
+//   async function handleIssue() {
+//     if (selected.size === 0 || isArchiveYear) return;
+//     setSaving(true);
+//     try {
+//       // await allotCustomerCodes(result.access_card_number, [...selected]);
+//       await allotCustomerCodes(
+//         result.access_card_number,
+//         [...selected],
+//         lastCredentialNo
+//       );
+//       showToast("success", "Ballots allotted successfully", `${selected.size} ballot(s) issued.`);
+//       const refreshed = await searchAccessCard(
+//         result.access_card_number,
+//         lastCredentialNo
+//       );
+//       setResult(refreshed);
+//       setSelected(new Set());
+//       setVerifiedCheck(false);
+//       setStep("select");
+//       loadMySummary();
+//     } catch (err) {
+//       showToast("danger", "Could not issue ballots", getErrorMessage(err, "Please review and try again."));
+//     } finally {
+//       setSaving(false);
+//     }
+//   }
+
+//   const pendingCount = result?.customer_codes.filter((c) => c.selectable).length || 0;
+//   const selectedCodesList = result?.customer_codes.filter((c) => selected.has(c.customer_code)) || [];
+//   const categoryCount = selectedCodesList.filter((c) => c.roll_type === "category").length;
+//   const exclusiveCount = selectedCodesList.filter((c) => c.roll_type === "exclusive").length;
+//   // const womenCount = selectedCodesList.filter((c) => c.roll_type === "women").length;
+
+//   return (
+//     <div className="mx-auto space-y-4 px-4 py-6 sm:px-6 lg:px-8">
+
+//       {/* Device ID setup — one time */}
+//       {!deviceId && (
+//         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+//           <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-amber-800">
+//             This counter's device ID (one-time setup)
+//           </label>
+//           <div className="flex items-center gap-2">
+//             <input
+//               type="text" value={deviceIdInput}
+//               onChange={(e) => setDeviceIdInput(e.target.value)}
+//               placeholder="e.g. COUNTER-1"
+//               className="flex-1 rounded-lg border border-amber-300 bg-white p-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+//             />
+//             <button
+//               onClick={() => {
+//                 if (!deviceIdInput.trim()) return;
+//                 localStorage.setItem("counter_device_id", deviceIdInput.trim());
+//                 setDeviceId(deviceIdInput.trim());
+//               }}
+//               className="rounded-lg bg-amber-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-amber-700"
+//             >
+//               Save
+//             </button>
+//           </div>
+//           <p className="mt-1.5 text-[11px] text-amber-700">
+//             Must match device_id in this PC's config.json for the reader script.
+//           </p>
+//         </div>
+//       )}
+
+//       {/* Search bar */}
+//       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+//         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+//           <div className="w-full max-w-xl flex-1 sm:w-auto">
+//             <label className="mb-1.5 flex items-center space-x-1 text-xs font-bold uppercase tracking-wider text-slate-700">
+//               <svg className="h-3.5 w-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+//                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h1a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM9 4h1v16H9zm3 0h2v16h-2zm4 0h1a1 1 0 011 1v14a1 1 0 01-1 1h-1z" />
+//               </svg>
+//               <span>Access Card Quick Search</span>
+//             </label>
+//             <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+//               <input
+//                 type="text" value={cardNumber}
+//                 onChange={(e) => setCardNumber(e.target.value)}
+//                 placeholder="Enter Access Card No (e.g. GEMXXXXX)"
+//                 className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-24 font-mono text-sm font-semibold text-slate-900 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+//               />
+//               <svg className="absolute left-3.5 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+//                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+//               </svg>
+//               <button type="submit" disabled={loading}
+//                 className="absolute right-1.5 rounded-lg bg-blue-600 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700 disabled:opacity-60">
+//                 {loading ? "Searching…" : "Search"}
+//               </button>
+//             </form>
+//           </div>
+
+//           <div className="flex items-center gap-3">
+//             {/* Scan Card button */}
+//             {deviceId && (
+//               <button
+//                 onClick={() => {
+//                   if (!scanModeActive) {
+//                     tabActiveSince.current = Date.now() / 1000;
+//                     setResult(null);
+//                     setCardNumber("");
+//                     setSelected(new Set());
+//                     setStep("select");
+//                     setError("");
+//                   }
+//                   setScanModeActive((prev) => !prev);
+//                 }}
+//                 className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all shadow-sm ${scanModeActive
+//                   ? "border-emerald-500 bg-emerald-600 text-white"
+//                   : "border-slate-300 bg-slate-700 text-white hover:bg-slate-800"}`}
+//               >
+//                 {scanModeActive ? (
+//                   <><span className="h-2 w-2 rounded-full bg-white animate-pulse" /> Scanning...</>
+//                 ) : (
+//                   <><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+//                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h1a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM9 4h1v16H9zm3 0h2v16h-2zm4 0h1a1 1 0 011 1v14a1 1 0 01-1 1h-1z" />
+//                   </svg> Scan Card</>
+//                 )}
+//               </button>
+//             )}
+
+//             {/* Balance badges */}
+//             {mySummary.length > 0 && (
+//               <div className="flex flex-wrap items-center gap-2">
+//                 {mySummary.map((row) => (
+//                   <div key={row.roll_type}
+//                     className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${row.balance === 0 ? "border-rose-200 bg-rose-50 text-rose-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
+//                     {row.roll_type === "category" ? "Category" : row.roll_type === "women" ? "Women" : "Exclusive"}: {row.balance} / {row.received}
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//         {error && <p className="mt-3 text-xs font-medium text-rose-600">{error}</p>}
+//       </div>
+
+//       {result && (
+//         <div className="flex gap-4 items-start">
+
+//           {/* LEFT — cards */}
+//           <div className="flex-1 min-w-0">
+
+//             {/* Header bar */}
+//             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+//               <div className="border-b border-slate-800 bg-blue-900 p-4 text-white">
+//                 <div className="flex flex-col items-start justify-between gap-3 lg:flex-row lg:items-center">
+//                   <div>
+//                     <h3 className="flex items-center space-x-2 text-sm font-bold">
+//                       <svg className="h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+//                         <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+//                       </svg>
+//                       <span>Customer Codes Ballot Allotment</span>
+//                     </h3>
+//                     <p className="mt-0.5 text-xs text-slate-300">
+//                       Access Card: <strong className="font-mono text-blue-300">{result.access_card_number}</strong>
+//                     </p>
+//                   </div>
+//                   <div className="flex items-center gap-2">
+//                     <div className="flex items-center space-x-1 rounded-lg border border-slate-700 bg-slate-800 p-1">
+//                       <button onClick={() => setLayoutMode("vertical")}
+//                         className={`rounded px-2.5 py-1 text-xs transition-all ${layoutMode === "vertical" ? "bg-blue-600 font-bold text-white" : "text-slate-400 hover:text-white"}`}>
+//                         Vertical
+//                       </button>
+//                       <button onClick={() => setLayoutMode("grid")}
+//                         className={`rounded px-2.5 py-1 text-xs transition-all ${layoutMode === "grid" ? "bg-blue-600 font-bold text-white" : "text-slate-400 hover:text-white"}`}>
+//                         Grid
+//                       </button>
+//                     </div>
+//                     {canEditAuthRep && (
+//                       <button
+//                         onClick={() => setRepModalEntity(true)}
+//                         className="flex items-center gap-1.5 rounded-lg border border-purple-400 bg-purple-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-600">
+//                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+//                           <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+//                         </svg>
+//                         Change Rep
+//                       </button>
+//                     )}
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {/* Cards list */}
+//               {step === "select" && (
+//                 <div className="p-4">
+//                   <div className={layoutMode === "vertical" ? "space-y-3" : "grid grid-cols-1 gap-3 sm:grid-cols-2"}>
+//                     {result.customer_codes.map((code) => (
+//                       <BallotCodeCard
+//                         key={code.customer_code}
+//                         code={code}
+//                         selected={selected.has(code.customer_code)}
+//                         onToggle={() => toggleCode(code.customer_code)}
+//                         disabled={isArchiveYear}
+//                       />
+//                     ))}
+//                   </div>
+//                 </div>
+//               )}
+
+//               {step === "confirm" && (
+//                 <div className="p-5">
+//                   <div className="space-y-4">
+//                     <h4 className="text-sm font-bold text-slate-800">Confirm Ballot Allotment</h4>
+//                     <div className="grid grid-cols-2 gap-3">
+//                       <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-center">
+//                         <div className="text-[10px] font-bold uppercase tracking-wide text-purple-700">Category</div>
+//                         <div className="mt-1 text-3xl font-black text-purple-900">{categoryCount}</div>
+//                       </div>
+//                       <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+//                         <div className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Exclusive</div>
+//                         <div className="mt-1 text-3xl font-black text-amber-900">{exclusiveCount}</div>
+//                       </div>
+//                       {/* <div className="rounded-xl border border-pink-200 bg-pink-50 p-4 text-center">
+//                         <div className="text-[10px] font-bold uppercase tracking-wide text-pink-700">Women</div>
+//                         <div className="mt-1 text-3xl font-black text-pink-900">{womenCount}</div>
+//                       </div> */}
+//                     </div>
+//                     {/* <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+//                       <div className="mb-2 text-xs font-bold text-slate-600">Customer codes to be allotted:</div>
+//                       <ul className="space-y-1">
+//                         {selectedCodesList.map((c) => (
+//                           <li key={c.customer_code} className="flex items-center justify-between font-mono text-xs text-slate-700">
+//                             <span>{c.customer_code} — {c.entity_name}</span>
+//                             <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${c.roll_type === "category" ? "bg-purple-100 text-purple-800"
+//                               : c.roll_type === "women" ? "bg-pink-100 text-pink-800"
+//                                 : "bg-amber-100 text-amber-800"}`}>
+//                               {c.roll_type}
+//                             </span>
+//                           </li>
+//                         ))}
+//                       </ul>
+//                     </div> */}
+//                     <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+//                       <div className="mb-2 text-xs font-bold text-slate-600">Customer codes to be allotted:</div>
+//                       <ul className="divide-y divide-slate-100">
+//                         {selectedCodesList.map((c) => (
+//                           <li key={c.customer_code} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
+//                             <div className="min-w-0 flex-1">
+//                               <span className="font-mono text-xs font-bold text-slate-800">{c.customer_code}</span>
+//                               <span className="mx-1.5 text-slate-400">—</span>
+//                               <span className="text-xs text-slate-600 truncate">{c.entity_name}</span>
+//                             </div>
+//                             <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+//                               c.roll_type === "category" ? "bg-purple-100 text-purple-800"
+//                               : "bg-amber-100 text-amber-800"}`}>
+//                               {c.roll_type}
+//                             </span>
+//                           </li>
+//                         ))}
+//                       </ul>
+//                     </div>
+//                   </div>
+//                 </div>
+//               )}
+
+//               {/* Footer */}
+//               {step === "select" && (
+//                 <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3">
+//                   <div className="text-xs font-medium text-slate-600">
+//                     Selected: <span className="font-mono font-bold text-blue-700">{selected.size} / {pendingCount}</span>
+//                   </div>
+//                   <div className="flex items-center gap-2">
+//                     {selected.size > 0 && (
+//                       <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5">
+//                         <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5">Category: {categoryCount}</span>
+//                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Exclusive: {exclusiveCount}</span>
+//                         {womenCount > 0 && <span className="text-[10px] font-bold text-pink-700 bg-pink-50 border border-pink-200 rounded px-1.5 py-0.5">Women: {womenCount}</span>}
+//                         <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5">Total: {selected.size}</span>
+//                       </div>
+//                     )}
+//                     <button onClick={clearSelection}
+//                       className="rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-300">
+//                       Clear
+//                     </button>
+//                     <button
+//                       onClick={() => setStep("confirm")}
+//                       disabled={selected.size === 0 || isArchiveYear}
+//                       className={`rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${selected.size > 0 && !isArchiveYear ? "bg-blue-600 text-white hover:bg-blue-700" : "cursor-not-allowed bg-slate-300 text-slate-500"}`}>
+//                       Photo Verified ({selected.size} selected)
+//                     </button>
+//                   </div>
+//                 </div>
+//               )}
+
+//               {step === "confirm" && (
+//                 <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3">
+//                   <div className="text-xs font-medium text-slate-600">
+//                     {/* Total: <span className="font-mono font-bold text-blue-700">{categoryCount} Cat + {exclusiveCount} Exc + {womenCount} Women = {selected.size} ballots</span> */}
+//                     Total: <span className="font-mono font-bold text-blue-700">{categoryCount} Cat + {exclusiveCount} Exc = {selected.size} ballots</span>
+
+//                   </div>
+//                   <div className="flex items-center gap-2">
+//                     <button onClick={() => setStep("select")}
+//                       className="rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-300">
+//                       Back
+//                     </button>
+//                     <button onClick={handleIssue} disabled={saving || isArchiveYear}
+//                       className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:bg-slate-300 disabled:text-slate-500">
+//                       {saving ? "Submitting…" : "Ballot Assign"}
+//                     </button>
+//                   </div>
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+
+//           {/* RIGHT — summary panel */}
+//           <div className="w-56 shrink-0 space-y-3">
+//             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+//               <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">Allotment summary</p>
+//               <div className="space-y-2">
+//                 <div className="flex items-center justify-between rounded-lg bg-purple-50 border border-purple-200 px-3 py-2">
+//                   <span className="text-xs font-bold text-purple-700">Category</span>
+//                   <span className="text-lg font-black text-purple-900">{categoryCount}</span>
+//                 </div>
+//                 <div className="flex items-center justify-between rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+//                   <span className="text-xs font-bold text-amber-700">Exclusive</span>
+//                   <span className="text-lg font-black text-amber-900">{exclusiveCount}</span>
+//                 </div>
+//                 {/* <div className="flex items-center justify-between rounded-lg bg-pink-50 border border-pink-200 px-3 py-2">
+//                   <span className="text-xs font-bold text-pink-700">Women</span>
+//                   <span className="text-lg font-black text-pink-900">{womenCount}</span>
+//                 </div> */}
+//                 <div className="flex items-center justify-between rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
+//                   <span className="text-xs font-bold text-blue-700">Total</span>
+//                   <span className="text-lg font-black text-blue-900">{selected.size}</span>
+//                 </div>
+//               </div>
+//             </div>
+
+//             {/* On the spot payment — if any selected code has override */}
+//             {selectedCodesList.some((c) => c.eligibility_source === "admin_override") && (
+//               <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
+//                 <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-amber-800">On the spot payment</p>
+//                 {selectedCodesList.filter((c) => c.eligibility_source === "admin_override").map((c) => (
+//                   <div key={c.customer_code} className="mb-2 last:mb-0">
+//                     <p className="font-mono text-[11px] font-bold text-amber-900">{c.customer_code}</p>
+//                     {c.eligibility_remark && <p className="text-[11px] text-amber-800">Remark: {c.eligibility_remark}</p>}
+//                     {c.eligibility_updated_by && <p className="text-[11px] text-amber-700">By: {c.eligibility_updated_by}</p>}
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+
+//             {/* Pending / blocked summary */}
+//             {result.customer_codes.some((c) => !c.selectable && !c.already_allotted) && (
+//               <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+//                 <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rose-700">Not eligible</p>
+//                 {result.customer_codes.filter((c) => !c.selectable && !c.already_allotted).map((c) => (
+//                   <p key={c.customer_code} className="font-mono text-[11px] font-bold text-rose-800">{c.customer_code} — {c.entity_name}</p>
+//                 ))}
+//               </div>
+//             )}
+
+//             {/* Already allotted summary */}
+//             {result.customer_codes.some((c) => c.already_allotted) && (
+//               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+//                 {/* <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 ">Already allotted</p> */}
+//                 <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-red-500">
+//                   Already allotted
+//                 </p>
+//                 {result.customer_codes.filter((c) => c.already_allotted).map((c) => (
+//                   <p key={c.customer_code} className="font-mono text-[11px] font-bold text-slate-600">{c.customer_code} — {c.entity_name}</p>
+//                 ))}
+//               </div>
+//             )}
+//           </div>
+
+//         </div>
+//       )}
+
+//       <AuthRepModal
+//         open={!!repModalEntity}
+//         onClose={() => setRepModalEntity(null)}
+//         entities={result?.customer_codes || []}
+//         onChanged={() => runSearch(result.access_card_number)}
+//       />
+//     </div>
+//   );
+// }
+
+// function BallotCodeCard({ code, selected, onToggle, disabled }) {
+//   const locked = code.already_allotted;
+//   const blocked = !locked && !code.selectable;
+//   const [photoZoomed, setPhotoZoomed] = useState(false);
+
+//   function formatCategory(cat) {
+//     if (!cat) return "—";
+//     const map = { C1: "Category 1", C2: "Category 2", C3: "Category 3", c1: "Category 1", c2: "Category 2", c3: "Category 3" };
+//     return map[cat] || cat;
+//   }
+
+//   function formatPool(rollType) {
+//     if (!rollType) return null;
+//     if (rollType === "category") return "Category pool";
+//     if (rollType === "exclusive") return "Exclusive pool";
+//     // if (rollType === "women") return "Women pool";
+//     return rollType;
+//   }
+
+//   return (
+//     <div className={`relative flex flex-col rounded-xl border transition-all ${locked ? "border-slate-300 bg-slate-100/90 opacity-75"
+//       : blocked ? "border-rose-300 bg-rose-50/40"
+//         : "border-emerald-200 bg-white hover:border-emerald-400 hover:shadow-sm"}`}>
+
+//       {/* Header */}
+//       <div className="flex items-center justify-between border-b border-slate-200/80 px-3.5 py-2.5">
+//         <div className="flex items-center gap-2 flex-wrap">
+//           <span className={`h-2 w-2 rounded-full shrink-0 ${locked ? "bg-slate-400" : blocked ? "bg-rose-500" : "bg-emerald-500"}`} />
+//           <span className="font-mono text-lg font-black tracking-tight text-slate-900">{code.customer_code}</span>
+//           {/* <span className={`rounded px-2 py-0.5 font-mono text-[10px] font-bold ${locked ? "bg-slate-200 text-slate-500" : blocked ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}>
+//             {locked ? "ALLOTTED" : blocked ? "BLOCKED" : "OPEN"}
+//           </span> */}
+//           <span className={`rounded px-2 py-0.5 font-mono text-[10px] font-bold ${code.voting_done ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-500"}`}>
+//             Voting: {code.voting_done ? "Yes" : "No"}
+//           </span>
+//         </div>
+//         <div className="flex items-center gap-1.5 shrink-0">
+//           {code.membership_number && (
+//             <span className="rounded bg-blue-50 px-2 py-0.5 font-mono text-[18px] font-bold text-blue-700 border border-blue-200">
+//               {code.membership_number}
+//             </span>
+//           )}
+//           {!locked && (
+//             <span className={`rounded px-2 py-0.5 text-[18px] font-bold ${!blocked ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
+//               {!blocked ? "✓ Eligible" : "✗ Not eligible"}
+//             </span>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Body */}
+//       <div className="flex items-start gap-3 px-3.5 py-3">
+//         {/* Photo — click to zoom */}
+//         <div
+//           onClick={() => setPhotoZoomed((p) => !p)}
+//           className={`shrink-0 flex items-center justify-center overflow-hidden rounded-xl border-2 border-slate-200 bg-gradient-to-br from-slate-100 to-slate-200 font-black text-slate-500 cursor-zoom-in transition-all duration-200 ${photoZoomed ? "w-32 h-32 text-4xl" : "w-16 h-16 text-xl"}`}
+//           title="Click to zoom"
+//         >
+//           {code.photograph_path ? (
+//             <img src={mediaUrl(code.photograph_path)} alt={code.entity_name}
+//               className="h-full w-full object-cover"
+//               onError={(e) => { e.target.style.display = "none"; e.target.parentNode.innerHTML = `<span class="font-black text-slate-500 text-xl">${(code.entity_name || "?").charAt(0)}</span>`; }} />
+//           ) : (
+//             <span>{(code.entity_name || "?").charAt(0)}</span>
+//           )}
+//         </div>
+
+//         {/* Info */}
+//         <div className="min-w-0 flex-1">
+//           <p className="font-mono text-xs text-slate-400">{code.access_card_number}</p>
+//           <p className="mt-0.5 text-sm font-bold text-slate-900 leading-tight">{code.entity_name}</p>
+//           <p className="mt-1 text-[11px] text-slate-500">
+//             Auth rep: <span className="font-semibold text-slate-700">{code.representative_name || "—"}</span>
+//             {code.is_rep_changed && (
+//               <span className="ml-1.5 inline-flex items-center rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-800">⚠ Rep changed</span>
+//             )}
+//           </p>
+//           <p className="mt-0.5 text-[11px] text-slate-500">
+//             Voting category: <span className="font-semibold text-slate-700">{formatCategory(code.category)}</span>
+//           </p>
+//         </div>
+
+//         {/* Status pills */}
+//         <div className="flex shrink-0 flex-col items-end gap-1.5">
+//           <span className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[13px] font-bold ${code.annual_fee_status === "paid" ? "text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
+//             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+//               <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+//             </svg>
+//             {code.annual_fee_status === "paid" ? "Paid" : "Unpaid"}
+//           </span>
+//           <span className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[13px] font-bold ${code.kyc_status === "yes" ? "text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
+//             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+//               {code.kyc_status === "yes"
+//                 ? <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+//                 : <path strokeLinecap="round" strokeLinejoin="round" d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+//               }
+//             </svg>
+//             {code.kyc_status === "yes" ? "KYC verified" : "KYC pending"}
+//           </span>
+//           {/* <span className="text-[10px] text-slate-400">Ballots: {code.ballot_entitlement}</span> */}
+//         </div>
+//       </div>
+
+//       {/* On the spot payment */}
+//       {code.eligibility_source === "admin_override" && (
+//         <div className="mx-3.5 mb-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2">
+//           <p className="text-[11px] font-bold text-amber-800">
+//             On the spot payment: {code.voting_eligibility === "eligible" ? "Yes" : "No"}
+//           </p>
+//           {code.eligibility_remark && <p className="mt-0.5 text-[11px] text-amber-700">Remark: {code.eligibility_remark}</p>}
+//           {code.eligibility_updated_by && <p className="text-[11px] text-amber-600">By: {code.eligibility_updated_by}</p>}
+//         </div>
+//       )}
+
+//       {/* Pool type */}
+//       {code.roll_type && (
+//         <div className="mx-3.5 mb-2.5">
+//           <span className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${code.roll_type === "category" ? "border-purple-200 bg-purple-50 text-purple-800"
+//             : code.roll_type === "women" ? "border-pink-200 bg-pink-50 text-pink-800"
+//               : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+//             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+//               <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+//             </svg>
+//             {formatPool(code.roll_type)}
+//           </span>
+//         </div>
+//       )}
+
+//       {/* Footer */}
+//       {locked ? (
+//         <div className="border-t border-red-200 bg-red-50 px-3.5 py-2.5">
+//           <div className="flex items-center justify-between">
+//             <span className="flex items-center gap-1.5 text-[11px] font-bold text-red-500">
+//               <svg
+//                 className="h-3.5 w-3.5 text-red-500"
+//                 fill="none"
+//                 viewBox="0 0 24 24"
+//                 stroke="currentColor"
+//                 strokeWidth={2}
+//               >
+//                 <path
+//                   strokeLinecap="round"
+//                   strokeLinejoin="round"
+//                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8"
+//                 />
+//               </svg>
+
+//               Already allotted
+//             </span>
+
+//             {code.allotted_at && (
+//               <span className="font-mono text-[10px] text-red-400">
+//                 {new Date(code.allotted_at).toLocaleString()}
+//               </span>
+//             )}
+//           </div>
+//         </div>
+//       ) : blocked ? (
+//         <div className="border-t border-rose-200 bg-rose-50 px-3.5 py-2.5">
+//           <span className="text-[11px] font-semibold text-rose-700">
+//             Not eligible — check payment and KYC status above
+//           </span>
+//         </div>
+//       ) : (
+//         <label className="flex cursor-pointer items-center justify-between border-t border-emerald-200 bg-emerald-50 px-3.5 py-2.5 hover:bg-emerald-100 transition-colors rounded-b-xl">
+//           <span className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-800">
+//             <svg className={`h-4 w-4 ${selected ? "text-emerald-600" : "text-slate-300"}`} fill="currentColor" viewBox="0 0 20 20">
+//               {selected
+//                 ? <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3.707 5.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293z" clipRule="evenodd" />
+//                 : <path d="M4 4a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+//               }
+//             </svg>
+//             {selected ? "Selected for allotment" : "Select for allotment"}
+//           </span>
+//           <input type="checkbox" checked={selected} disabled={disabled} onChange={onToggle}
+//             className="h-4 w-4 cursor-pointer rounded text-emerald-600 focus:ring-emerald-500" />
+//         </label>
+//       )}
+//     </div>
+//   );
 // }
 
 
@@ -1253,16 +1934,15 @@ function initials(name = "") {
 
 export default function CounterSearch() {
   const { showToast } = useToast();
-  const [lastCredentialNo, setLastCredentialNo] = useState(null);
   const { user } = useAuth();
+  const [lastCredentialNo, setLastCredentialNo] = useState(null);
   const [cardNumber, setCardNumber] = useState("");
   const [result, setResult] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [layoutMode, setLayoutMode] = useState("vertical");
-  const [verifiedCheck, setVerifiedCheck] = useState(false);
+  const [layoutMode, setLayoutMode] = useState("grid");
   const [repModalEntity, setRepModalEntity] = useState(null);
   const [deviceId, setDeviceId] = useState(() => localStorage.getItem("counter_device_id") || "");
   const [deviceIdInput, setDeviceIdInput] = useState("");
@@ -1315,13 +1995,12 @@ export default function CounterSearch() {
       setError("Please enter an access card number to search.");
       return;
     }
-    setLastCredentialNo(credentialNo); // <-- ye add kar
+    setLastCredentialNo(credentialNo);
     setLoading(true);
     try {
       const data = await searchAccessCard(card.trim(), credentialNo);
       setResult(data);
       setSelected(new Set(data.customer_codes.filter((c) => c.default_selected).map((c) => c.customer_code)));
-      setVerifiedCheck(false);
       setStep("select");
       showToast("success", "Member record found", `Loaded ${data.customer_codes.length} customer code(s).`);
     } catch (err) {
@@ -1349,26 +2028,17 @@ export default function CounterSearch() {
 
   function clearSelection() {
     setSelected(new Set());
-    setVerifiedCheck(false);
   }
+
   async function handleIssue() {
     if (selected.size === 0 || isArchiveYear) return;
     setSaving(true);
     try {
-      // await allotCustomerCodes(result.access_card_number, [...selected]);
-      await allotCustomerCodes(
-        result.access_card_number,
-        [...selected],
-        lastCredentialNo
-      );
+      await allotCustomerCodes(result.access_card_number, [...selected], lastCredentialNo);
       showToast("success", "Ballots allotted successfully", `${selected.size} ballot(s) issued.`);
-      const refreshed = await searchAccessCard(
-        result.access_card_number,
-        lastCredentialNo
-      );
+      const refreshed = await searchAccessCard(result.access_card_number, lastCredentialNo);
       setResult(refreshed);
       setSelected(new Set());
-      setVerifiedCheck(false);
       setStep("select");
       loadMySummary();
     } catch (err) {
@@ -1382,15 +2052,14 @@ export default function CounterSearch() {
   const selectedCodesList = result?.customer_codes.filter((c) => selected.has(c.customer_code)) || [];
   const categoryCount = selectedCodesList.filter((c) => c.roll_type === "category").length;
   const exclusiveCount = selectedCodesList.filter((c) => c.roll_type === "exclusive").length;
-  const womenCount = selectedCodesList.filter((c) => c.roll_type === "women").length;
 
   return (
-    <div className="mx-auto space-y-4 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-3 px-4 py-4 sm:px-6 lg:px-8">
 
-      {/* Device ID setup — one time */}
+      {/* Device ID setup */}
       {!deviceId && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-amber-800">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-amber-800">
             This counter's device ID (one-time setup)
           </label>
           <div className="flex items-center gap-2">
@@ -1398,7 +2067,7 @@ export default function CounterSearch() {
               type="text" value={deviceIdInput}
               onChange={(e) => setDeviceIdInput(e.target.value)}
               placeholder="e.g. COUNTER-1"
-              className="flex-1 rounded-lg border border-amber-300 bg-white p-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="flex-1 rounded-lg border border-amber-300 bg-white p-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
             <button
               onClick={() => {
@@ -1406,112 +2075,101 @@ export default function CounterSearch() {
                 localStorage.setItem("counter_device_id", deviceIdInput.trim());
                 setDeviceId(deviceIdInput.trim());
               }}
-              className="rounded-lg bg-amber-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-amber-700"
-            >
+              className="rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700">
               Save
             </button>
           </div>
-          <p className="mt-1.5 text-[11px] text-amber-700">
-            Must match device_id in this PC's config.json for the reader script.
-          </p>
         </div>
       )}
 
-      {/* Search bar */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div className="w-full max-w-xl flex-1 sm:w-auto">
-            <label className="mb-1.5 flex items-center space-x-1 text-xs font-bold uppercase tracking-wider text-slate-700">
-              <svg className="h-3.5 w-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h1a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM9 4h1v16H9zm3 0h2v16h-2zm4 0h1a1 1 0 011 1v14a1 1 0 01-1 1h-1z" />
-              </svg>
-              <span>Access Card Quick Search</span>
-            </label>
+      {/* Search bar — compact */}
+      <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <div className="flex items-center gap-3">
+          {/* Search input */}
+          <div className="flex-1">
             <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+              <svg className="absolute left-3 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
               <input
                 type="text" value={cardNumber}
                 onChange={(e) => setCardNumber(e.target.value)}
                 placeholder="Enter Access Card No (e.g. GEMXXXXX)"
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-24 font-mono text-sm font-semibold text-slate-900 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2 pl-9 pr-24 font-mono text-sm font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <svg className="absolute left-3.5 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
               <button type="submit" disabled={loading}
-                className="absolute right-1.5 rounded-lg bg-blue-600 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700 disabled:opacity-60">
+                className="absolute right-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60">
                 {loading ? "Searching…" : "Search"}
               </button>
             </form>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Scan Card button */}
-            {deviceId && (
-              <button
-                onClick={() => {
-                  if (!scanModeActive) {
-                    tabActiveSince.current = Date.now() / 1000;
-                    setResult(null);
-                    setCardNumber("");
-                    setSelected(new Set());
-                    setStep("select");
-                    setError("");
-                  }
-                  setScanModeActive((prev) => !prev);
-                }}
-                className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all shadow-sm ${scanModeActive
+          {/* Scan Card button */}
+          {deviceId && (
+            <button
+              onClick={() => {
+                if (!scanModeActive) {
+                  tabActiveSince.current = Date.now() / 1000;
+                  setResult(null);
+                  setCardNumber("");
+                  setSelected(new Set());
+                  setStep("select");
+                  setError("");
+                }
+                setScanModeActive((prev) => !prev);
+              }}
+              className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-all ${
+                scanModeActive
                   ? "border-emerald-500 bg-emerald-600 text-white"
-                  : "border-slate-300 bg-slate-700 text-white hover:bg-slate-800"}`}
-              >
-                {scanModeActive ? (
-                  <><span className="h-2 w-2 rounded-full bg-white animate-pulse" /> Scanning...</>
-                ) : (
-                  <><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h1a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM9 4h1v16H9zm3 0h2v16h-2zm4 0h1a1 1 0 011 1v14a1 1 0 01-1 1h-1z" />
-                  </svg> Scan Card</>
-                )}
-              </button>
-            )}
+                  : "border-slate-300 bg-slate-700 text-white hover:bg-slate-800"}`}>
+              {scanModeActive ? (
+                <><span className="h-2 w-2 rounded-full bg-white animate-pulse" /> Scanning...</>
+              ) : (
+                <><svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h1a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM9 4h1v16H9zm3 0h2v16h-2zm4 0h1a1 1 0 011 1v14a1 1 0 01-1 1h-1z" />
+                </svg> Scan Card</>
+              )}
+            </button>
+          )}
 
-            {/* Balance badges */}
-            {mySummary.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                {mySummary.map((row) => (
-                  <div key={row.roll_type}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${row.balance === 0 ? "border-rose-200 bg-rose-50 text-rose-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
-                    {row.roll_type === "category" ? "Category" : row.roll_type === "women" ? "Women" : "Exclusive"}: {row.balance} / {row.received}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Balance badges */}
+          {mySummary.length > 0 && (
+            <div className="flex shrink-0 items-center gap-1.5">
+              {mySummary.map((row) => (
+                <div key={row.roll_type}
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-bold ${row.balance === 0 ? "border-rose-200 bg-rose-50 text-rose-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
+                  {row.roll_type === "category" ? "Cat" : "Exc"}: {row.balance}/{row.received}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        {error && <p className="mt-3 text-xs font-medium text-rose-600">{error}</p>}
+        {error && <p className="mt-2 text-xs font-medium text-rose-600">{error}</p>}
       </div>
 
       {result && (
-        <div className="flex gap-4 items-start">
+        <div className="flex gap-3 items-start">
 
           {/* LEFT — cards */}
           <div className="flex-1 min-w-0">
-
-            {/* Header bar */}
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-800 bg-blue-900 p-4 text-white">
-                <div className="flex flex-col items-start justify-between gap-3 lg:flex-row lg:items-center">
+
+              {/* Header */}
+              <div className="border-b border-slate-800 bg-blue-900 px-4 py-3 text-white">
+                <div className="flex items-center justify-between gap-3">
                   <div>
-                    <h3 className="flex items-center space-x-2 text-sm font-bold">
+                    <h3 className="flex items-center gap-2 text-sm font-bold">
                       <svg className="h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                       </svg>
-                      <span>Customer Codes Ballot Allotment</span>
+                      Customer Codes Ballot Allotment
                     </h3>
                     <p className="mt-0.5 text-xs text-slate-300">
                       Access Card: <strong className="font-mono text-blue-300">{result.access_card_number}</strong>
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center space-x-1 rounded-lg border border-slate-700 bg-slate-800 p-1">
+                    <div className="flex items-center rounded-lg border border-slate-700 bg-slate-800 p-0.5">
                       <button onClick={() => setLayoutMode("vertical")}
                         className={`rounded px-2.5 py-1 text-xs transition-all ${layoutMode === "vertical" ? "bg-blue-600 font-bold text-white" : "text-slate-400 hover:text-white"}`}>
                         Vertical
@@ -1522,8 +2180,7 @@ export default function CounterSearch() {
                       </button>
                     </div>
                     {canEditAuthRep && (
-                      <button
-                        onClick={() => setRepModalEntity(true)}
+                      <button onClick={() => setRepModalEntity(true)}
                         className="flex items-center gap-1.5 rounded-lg border border-purple-400 bg-purple-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-600">
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1535,9 +2192,9 @@ export default function CounterSearch() {
                 </div>
               </div>
 
-              {/* Cards list */}
+              {/* Cards */}
               {step === "select" && (
-                <div className="p-4">
+                <div className="p-3">
                   <div className={layoutMode === "vertical" ? "space-y-3" : "grid grid-cols-1 gap-3 sm:grid-cols-2"}>
                     {result.customer_codes.map((code) => (
                       <BallotCodeCard
@@ -1552,55 +2209,52 @@ export default function CounterSearch() {
                 </div>
               )}
 
+              {/* Confirm step */}
               {step === "confirm" && (
-                <div className="p-5">
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-bold text-slate-800">Confirm Ballot Allotment</h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-center">
-                        <div className="text-[10px] font-bold uppercase tracking-wide text-purple-700">Category</div>
-                        <div className="mt-1 text-3xl font-black text-purple-900">{categoryCount}</div>
-                      </div>
-                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
-                        <div className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Exclusive</div>
-                        <div className="mt-1 text-3xl font-black text-amber-900">{exclusiveCount}</div>
-                      </div>
-                      <div className="rounded-xl border border-pink-200 bg-pink-50 p-4 text-center">
-                        <div className="text-[10px] font-bold uppercase tracking-wide text-pink-700">Women</div>
-                        <div className="mt-1 text-3xl font-black text-pink-900">{womenCount}</div>
-                      </div>
+                <div className="p-4 space-y-4">
+                  <h4 className="text-sm font-bold text-slate-800">Confirm Ballot Allotment</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-center">
+                      <div className="text-[10px] font-bold uppercase tracking-wide text-purple-700">Category</div>
+                      <div className="mt-1 text-3xl font-black text-purple-900">{categoryCount}</div>
                     </div>
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                      <div className="mb-2 text-xs font-bold text-slate-600">Customer codes to be allotted:</div>
-                      <ul className="space-y-1">
-                        {selectedCodesList.map((c) => (
-                          <li key={c.customer_code} className="flex items-center justify-between font-mono text-xs text-slate-700">
-                            <span>{c.customer_code} — {c.entity_name}</span>
-                            <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${c.roll_type === "category" ? "bg-purple-100 text-purple-800"
-                              : c.roll_type === "women" ? "bg-pink-100 text-pink-800"
-                                : "bg-amber-100 text-amber-800"}`}>
-                              {c.roll_type}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+                      <div className="text-[10px] font-bold uppercase tracking-wide text-amber-700">Exclusive</div>
+                      <div className="mt-1 text-3xl font-black text-amber-900">{exclusiveCount}</div>
                     </div>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className="mb-2 text-xs font-bold text-slate-600">Customer codes to be allotted:</div>
+                    <ul className="divide-y divide-slate-100">
+                      {selectedCodesList.map((c) => (
+                        <li key={c.customer_code} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
+                          <div className="min-w-0 flex-1">
+                            <span className="font-mono text-xs font-bold text-slate-800">{c.customer_code}</span>
+                            <span className="mx-1.5 text-slate-400">—</span>
+                            <span className="text-xs text-slate-600">{c.entity_name}</span>
+                          </div>
+                          <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                            c.roll_type === "category" ? "bg-purple-100 text-purple-800" : "bg-amber-100 text-amber-800"}`}>
+                            {c.roll_type}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               )}
 
-              {/* Footer */}
+              {/* Footer select */}
               {step === "select" && (
-                <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                   <div className="text-xs font-medium text-slate-600">
                     Selected: <span className="font-mono font-bold text-blue-700">{selected.size} / {pendingCount}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {selected.size > 0 && (
-                      <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5">
-                        <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5">Category: {categoryCount}</span>
-                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Exclusive: {exclusiveCount}</span>
-                        {womenCount > 0 && <span className="text-[10px] font-bold text-pink-700 bg-pink-50 border border-pink-200 rounded px-1.5 py-0.5">Women: {womenCount}</span>}
+                      <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1">
+                        <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5">Cat: {categoryCount}</span>
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Exc: {exclusiveCount}</span>
                         <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5">Total: {selected.size}</span>
                       </div>
                     )}
@@ -1611,17 +2265,21 @@ export default function CounterSearch() {
                     <button
                       onClick={() => setStep("confirm")}
                       disabled={selected.size === 0 || isArchiveYear}
-                      className={`rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${selected.size > 0 && !isArchiveYear ? "bg-blue-600 text-white hover:bg-blue-700" : "cursor-not-allowed bg-slate-300 text-slate-500"}`}>
+                      className={`rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${
+                        selected.size > 0 && !isArchiveYear
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "cursor-not-allowed bg-slate-300 text-slate-500"}`}>
                       Photo Verified ({selected.size} selected)
                     </button>
                   </div>
                 </div>
               )}
 
+              {/* Footer confirm */}
               {step === "confirm" && (
-                <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                   <div className="text-xs font-medium text-slate-600">
-                    Total: <span className="font-mono font-bold text-blue-700">{categoryCount} Cat + {exclusiveCount} Exc + {womenCount} Women = {selected.size} ballots</span>
+                    Total: <span className="font-mono font-bold text-blue-700">{categoryCount} Cat + {exclusiveCount} Exc = {selected.size} ballots</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => setStep("select")}
@@ -1638,8 +2296,8 @@ export default function CounterSearch() {
             </div>
           </div>
 
-          {/* RIGHT — summary panel */}
-          <div className="w-56 shrink-0 space-y-3">
+          {/* RIGHT — summary */}
+          <div className="w-52 shrink-0 space-y-3">
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">Allotment summary</p>
               <div className="space-y-2">
@@ -1651,10 +2309,6 @@ export default function CounterSearch() {
                   <span className="text-xs font-bold text-amber-700">Exclusive</span>
                   <span className="text-lg font-black text-amber-900">{exclusiveCount}</span>
                 </div>
-                <div className="flex items-center justify-between rounded-lg bg-pink-50 border border-pink-200 px-3 py-2">
-                  <span className="text-xs font-bold text-pink-700">Women</span>
-                  <span className="text-lg font-black text-pink-900">{womenCount}</span>
-                </div>
                 <div className="flex items-center justify-between rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
                   <span className="text-xs font-bold text-blue-700">Total</span>
                   <span className="text-lg font-black text-blue-900">{selected.size}</span>
@@ -1662,12 +2316,12 @@ export default function CounterSearch() {
               </div>
             </div>
 
-            {/* On the spot payment — if any selected code has override */}
+            {/* On the spot payment */}
             {selectedCodesList.some((c) => c.eligibility_source === "admin_override") && (
-              <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3">
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-amber-800">On the spot payment</p>
                 {selectedCodesList.filter((c) => c.eligibility_source === "admin_override").map((c) => (
-                  <div key={c.customer_code} className="mb-2 last:mb-0">
+                  <div key={c.customer_code} className="mb-1.5 last:mb-0">
                     <p className="font-mono text-[11px] font-bold text-amber-900">{c.customer_code}</p>
                     {c.eligibility_remark && <p className="text-[11px] text-amber-800">Remark: {c.eligibility_remark}</p>}
                     {c.eligibility_updated_by && <p className="text-[11px] text-amber-700">By: {c.eligibility_updated_by}</p>}
@@ -1676,9 +2330,9 @@ export default function CounterSearch() {
               </div>
             )}
 
-            {/* Pending / blocked summary */}
+            {/* Not eligible */}
             {result.customer_codes.some((c) => !c.selectable && !c.already_allotted) && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+              <div className="rounded-xl border border-rose-200 bg-rose-50 p-3">
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rose-700">Not eligible</p>
                 {result.customer_codes.filter((c) => !c.selectable && !c.already_allotted).map((c) => (
                   <p key={c.customer_code} className="font-mono text-[11px] font-bold text-rose-800">{c.customer_code} — {c.entity_name}</p>
@@ -1686,20 +2340,16 @@ export default function CounterSearch() {
               </div>
             )}
 
-            {/* Already allotted summary */}
+            {/* Already allotted */}
             {result.customer_codes.some((c) => c.already_allotted) && (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                {/* <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 ">Already allotted</p> */}
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-red-500">
-                  Already allotted
-                </p>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-red-500">Already allotted</p>
                 {result.customer_codes.filter((c) => c.already_allotted).map((c) => (
                   <p key={c.customer_code} className="font-mono text-[11px] font-bold text-slate-600">{c.customer_code} — {c.entity_name}</p>
                 ))}
               </div>
             )}
           </div>
-
         </div>
       )}
 
@@ -1733,30 +2383,28 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
   }
 
   return (
-    <div className={`relative flex flex-col rounded-xl border transition-all ${locked ? "border-slate-300 bg-slate-100/90 opacity-75"
+    <div className={`relative flex flex-col rounded-xl border transition-all ${
+      locked ? "border-slate-300 bg-slate-100/90 opacity-75"
       : blocked ? "border-rose-300 bg-rose-50/40"
-        : "border-emerald-200 bg-white hover:border-emerald-400 hover:shadow-sm"}`}>
+      : "border-emerald-200 bg-white hover:border-emerald-400 hover:shadow-sm"}`}>
 
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-200/80 px-3.5 py-2.5">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center justify-between border-b border-slate-200/80 px-3 py-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <span className={`h-2 w-2 rounded-full shrink-0 ${locked ? "bg-slate-400" : blocked ? "bg-rose-500" : "bg-emerald-500"}`} />
-          <span className="font-mono text-lg font-black tracking-tight text-slate-900">{code.customer_code}</span>
-          {/* <span className={`rounded px-2 py-0.5 font-mono text-[10px] font-bold ${locked ? "bg-slate-200 text-slate-500" : blocked ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-800"}`}>
-            {locked ? "ALLOTTED" : blocked ? "BLOCKED" : "OPEN"}
-          </span> */}
-          <span className={`rounded px-2 py-0.5 font-mono text-[10px] font-bold ${code.voting_done ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-500"}`}>
+          <span className="font-mono text-base font-black tracking-tight text-slate-900">{code.customer_code}</span>
+          <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-bold ${code.voting_done ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-500"}`}>
             Voting: {code.voting_done ? "Yes" : "No"}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           {code.membership_number && (
-            <span className="rounded bg-blue-50 px-2 py-0.5 font-mono text-[18px] font-bold text-blue-700 border border-blue-200">
+            <span className="rounded bg-blue-50 px-2 py-0.5 font-mono text-[11px] font-bold text-blue-700 border border-blue-200">
               {code.membership_number}
             </span>
           )}
           {!locked && (
-            <span className={`rounded px-2 py-0.5 text-[18px] font-bold ${!blocked ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
+            <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${!blocked ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
               {!blocked ? "✓ Eligible" : "✗ Not eligible"}
             </span>
           )}
@@ -1764,17 +2412,17 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
       </div>
 
       {/* Body */}
-      <div className="flex items-start gap-3 px-3.5 py-3">
-        {/* Photo — click to zoom */}
+      <div className="flex items-start gap-3 px-3 py-2.5">
+        {/* Photo */}
         <div
           onClick={() => setPhotoZoomed((p) => !p)}
-          className={`shrink-0 flex items-center justify-center overflow-hidden rounded-xl border-2 border-slate-200 bg-gradient-to-br from-slate-100 to-slate-200 font-black text-slate-500 cursor-zoom-in transition-all duration-200 ${photoZoomed ? "w-32 h-32 text-4xl" : "w-16 h-16 text-xl"}`}
+          className={`shrink-0 flex items-center justify-center overflow-hidden rounded-xl border-2 border-slate-200 bg-gradient-to-br from-slate-100 to-slate-200 font-black text-slate-500 cursor-zoom-in transition-all duration-200 ${photoZoomed ? "w-28 h-28 text-3xl" : "w-14 h-14 text-lg"}`}
           title="Click to zoom"
         >
           {code.photograph_path ? (
             <img src={mediaUrl(code.photograph_path)} alt={code.entity_name}
               className="h-full w-full object-cover"
-              onError={(e) => { e.target.style.display = "none"; e.target.parentNode.innerHTML = `<span class="font-black text-slate-500 text-xl">${(code.entity_name || "?").charAt(0)}</span>`; }} />
+              onError={(e) => { e.target.style.display = "none"; e.target.parentNode.innerHTML = `<span class="font-black text-slate-500 text-lg">${(code.entity_name || "?").charAt(0)}</span>`; }} />
           ) : (
             <span>{(code.entity_name || "?").charAt(0)}</span>
           )}
@@ -1782,28 +2430,30 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
 
         {/* Info */}
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-xs text-slate-400">{code.access_card_number}</p>
+          <p className="font-mono text-[11px] text-slate-400">{code.access_card_number}</p>
           <p className="mt-0.5 text-sm font-bold text-slate-900 leading-tight">{code.entity_name}</p>
-          <p className="mt-1 text-[11px] text-slate-500">
+          <p className="mt-0.5 text-[11px] text-slate-500">
             Auth rep: <span className="font-semibold text-slate-700">{code.representative_name || "—"}</span>
             {code.is_rep_changed && (
-              <span className="ml-1.5 inline-flex items-center rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-800">⚠ Rep changed</span>
+              <span className="ml-1 inline-flex items-center rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-800">⚠ Rep changed</span>
             )}
           </p>
-          <p className="mt-0.5 text-[11px] text-slate-500">
-            Voting category: <span className="font-semibold text-slate-700">{formatCategory(code.category)}</span>
+          <p className="text-[11px] text-slate-500">
+            Category: <span className="font-semibold text-slate-700">{formatCategory(code.category)}</span>
           </p>
         </div>
 
         {/* Status pills */}
-        <div className="flex shrink-0 flex-col items-end gap-1.5">
-          <span className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[13px] font-bold ${code.annual_fee_status === "paid" ? "text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-bold ${
+            code.annual_fee_status === "paid" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
             {code.annual_fee_status === "paid" ? "Paid" : "Unpaid"}
           </span>
-          <span className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[13px] font-bold ${code.kyc_status === "yes" ? "text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
+          <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-bold ${
+            code.kyc_status === "yes" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               {code.kyc_status === "yes"
                 ? <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -1812,27 +2462,27 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
             </svg>
             {code.kyc_status === "yes" ? "KYC verified" : "KYC pending"}
           </span>
-          {/* <span className="text-[10px] text-slate-400">Ballots: {code.ballot_entitlement}</span> */}
         </div>
       </div>
 
       {/* On the spot payment */}
       {code.eligibility_source === "admin_override" && (
-        <div className="mx-3.5 mb-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2">
+        <div className="mx-3 mb-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5">
           <p className="text-[11px] font-bold text-amber-800">
             On the spot payment: {code.voting_eligibility === "eligible" ? "Yes" : "No"}
           </p>
-          {code.eligibility_remark && <p className="mt-0.5 text-[11px] text-amber-700">Remark: {code.eligibility_remark}</p>}
+          {code.eligibility_remark && <p className="text-[11px] text-amber-700">Remark: {code.eligibility_remark}</p>}
           {code.eligibility_updated_by && <p className="text-[11px] text-amber-600">By: {code.eligibility_updated_by}</p>}
         </div>
       )}
 
       {/* Pool type */}
       {code.roll_type && (
-        <div className="mx-3.5 mb-2.5">
-          <span className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${code.roll_type === "category" ? "border-purple-200 bg-purple-50 text-purple-800"
+        <div className="mx-3 mb-2">
+          <span className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${
+            code.roll_type === "category" ? "border-purple-200 bg-purple-50 text-purple-800"
             : code.roll_type === "women" ? "border-pink-200 bg-pink-50 text-pink-800"
-              : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+            : "border-amber-200 bg-amber-50 text-amber-800"}`}>
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
             </svg>
@@ -1843,41 +2493,27 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
 
       {/* Footer */}
       {locked ? (
-        <div className="border-t border-red-200 bg-red-50 px-3.5 py-2.5">
+        <div className="border-t border-red-200 bg-red-50 px-3 py-2 rounded-b-xl">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[11px] font-bold text-red-500">
-              <svg
-                className="h-3.5 w-3.5 text-red-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8"
-                />
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-
               Already allotted
             </span>
-
             {code.allotted_at && (
-              <span className="font-mono text-[10px] text-red-400">
-                {new Date(code.allotted_at).toLocaleString()}
-              </span>
+              <span className="font-mono text-[10px] text-red-400">{new Date(code.allotted_at).toLocaleString()}</span>
             )}
           </div>
         </div>
       ) : blocked ? (
-        <div className="border-t border-rose-200 bg-rose-50 px-3.5 py-2.5">
+        <div className="border-t border-rose-200 bg-rose-50 px-3 py-2 rounded-b-xl">
           <span className="text-[11px] font-semibold text-rose-700">
             Not eligible — check payment and KYC status above
           </span>
         </div>
       ) : (
-        <label className="flex cursor-pointer items-center justify-between border-t border-emerald-200 bg-emerald-50 px-3.5 py-2.5 hover:bg-emerald-100 transition-colors rounded-b-xl">
+        <label className="flex cursor-pointer items-center justify-between border-t border-emerald-200 bg-emerald-50 px-3 py-2 hover:bg-emerald-100 transition-colors rounded-b-xl">
           <span className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-800">
             <svg className={`h-4 w-4 ${selected ? "text-emerald-600" : "text-slate-300"}`} fill="currentColor" viewBox="0 0 20 20">
               {selected

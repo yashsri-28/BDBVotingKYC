@@ -216,6 +216,7 @@ class AuthRepChange(models.Model):
     attachment = models.FileField(upload_to="auth_rep_documents/", null=True, blank=True)
     changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+")
     changed_at = models.DateTimeField(auto_now_add=True)
+    new_credential_no = models.CharField(max_length=50, blank=True)
 
     class Meta:
         ordering = ["-changed_at"]

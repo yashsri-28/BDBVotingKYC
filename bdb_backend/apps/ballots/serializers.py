@@ -117,17 +117,17 @@ class AllotmentSearchRequestSerializer(serializers.Serializer):
 
     
 class AuthRepChangeSerializer(serializers.ModelSerializer):
-    changed_by_username = serializers.CharField(source="changed_by.username", read_only=True, default=None)
-
     class Meta:
         model = AuthRepChange
         fields = [
-            "id", "customer_code", "old_representative_name", "old_access_card_number",
-            "new_representative_name", "new_access_card_number", "new_photo", "attachment",
-            "changed_by_username", "changed_at",
+            "id", "customer_code",
+            "old_representative_name", "old_access_card_number",
+            "new_representative_name", "new_access_card_number",
+            "new_credential_no",  # <-- add this
+            "new_photo", "attachment",
+            "changed_by", "changed_at",
         ]
-        read_only_fields = ["old_representative_name", "old_access_card_number", "changed_by_username", "changed_at"]
-
+        read_only_fields = ["id", "old_representative_name", "old_access_card_number", "changed_by", "changed_at"]
 
 
 

@@ -130,6 +130,7 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
   const [attachment, setAttachment] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [newCredentialNo, setNewCredentialNo] = useState("");
 
   const entity = entities.find((e) => e.customer_code === selectedCode) || entities[0];
 
@@ -141,6 +142,7 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
       setNewCard("");
       setNewPhoto(null);
       setAttachment(null);
+      setNewCredentialNo("");
       setError("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -160,6 +162,10 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
       setError("Please enter the New Access Card No.");
       return;
     }
+    if (!newCredentialNo.trim()) {
+      setError("Please enter the new card's credential number.");
+      return;
+    }
     if (!newPhoto) {
       setError("Please upload the Nominee Profile Photo.");
       return;
@@ -171,6 +177,7 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
         customerCode: selectedCode,
         newRepresentativeName: newName.trim(),
         newAccessCardNumber: newCard.trim() || undefined,
+        newCredentialNo: newCredentialNo.trim(),
         newPhoto,
         attachment,
       });
@@ -243,6 +250,19 @@ export default function AuthRepModal({ open, onClose, entities = [], onChanged }
             placeholder="e.g. GEM00001"
             className="w-full rounded-lg border border-slate-300 bg-white p-2 font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
+        </div>
+        <div>
+          <label className="mb-1 block font-bold text-slate-700">New Credential No. *</label>
+          <input
+            type="text"
+            value={newCredentialNo}
+            onChange={(e) => setNewCredentialNo(e.target.value)}
+            placeholder="Raw number from card reader (e.g. 167065)"
+            className="w-full rounded-lg border border-slate-300 bg-white p-2 font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          />
+          <p className="mt-1 text-[10px] text-slate-400">
+            Enter the credential number shown when the new card is scanned on the reader.
+          </p>
         </div>
 
         <div>
