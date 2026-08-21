@@ -170,6 +170,7 @@ const NAV_ITEMS = [
   { path: "/superadmin-actions", label: "SuperAdmin Actions Report", roles: ["admin"] },
   { path: "/candidate-master", label: "Candidate Master", roles: ["admin"] },
   { path: "/counting-detailed-report", label: "Detailed Voting Report", roles: ["counting", "admin"] },
+  { path: "/auth-rep-management", label: "Auth Rep Management", roles: ["admin"] },
 ];
 
 export default function TopBar() {

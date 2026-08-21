@@ -2138,7 +2138,7 @@ export default function CounterSearch() {
               {mySummary.map((row) => (
                 <div key={row.roll_type}
                   className={`rounded-lg border px-2.5 py-1 text-xs font-bold ${row.balance === 0 ? "border-rose-200 bg-rose-50 text-rose-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
-                  {row.roll_type === "category" ? "Cat" : "Exc"}: {row.balance}/{row.received}
+                  {row.roll_type === "category" ? "Category" : "Exculsive"}: {row.balance}/{row.received}
                 </div>
               ))}
             </div>
@@ -2257,13 +2257,36 @@ export default function CounterSearch() {
                   <div className="text-xs font-medium text-slate-600">
                     Selected: <span className="font-mono font-bold text-blue-700">{selected.size} / {pendingCount}</span>
                   </div>
-              )} */}
+                  <div className="flex items-center gap-2">
+                    {selected.size > 0 && (
+                      <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1">
+                        <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5">Category: {categoryCount}</span>
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Exculsive: {exclusiveCount}</span>
+                        <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5">Total: {selected.size}</span>
+                      </div>
+                    )}
+                    <button onClick={clearSelection}
+                      className="rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-300">
+                      Clear
+                    </button>
+                    <button
+                      onClick={() => setStep("confirm")}
+                      disabled={selected.size === 0 || isArchiveYear}
+                      className={`rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${
+                        selected.size > 0 && !isArchiveYear
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "cursor-not-allowed bg-slate-300 text-slate-500"}`}>
+                      Photo Verified ({selected.size} selected)
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Footer confirm */}
               {step === "confirm" && (
                 <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-2.5">
                   <div className="text-xs font-medium text-slate-600">
-                    Total: <span className="font-mono font-bold text-blue-700">{categoryCount} Cat + {exclusiveCount} Exc = {selected.size} ballots</span>
+                    Total: <span className="font-mono font-bold text-blue-700">{categoryCount} Category + {exclusiveCount} Exculsive = {selected.size} ballots</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => setStep("select")}

@@ -361,6 +361,41 @@ def find_users_by_credential(credential_no):
        changed and assigned this credential_no by Super Admin
     Both are always checked and merged, so no member is missed.
     """
+    return list(KycUser.objects.filter(credential_no=credential_no))
+
+
+def get_all_members(search=None, page=1, page_size=25):
+    """
+    Returns a paginated list of ALL members with full entity view data
+    (same shape as manual_search results), for the Auth Rep Management
+    screen's default listing. Optional search filters by customer_code
+    or membership_no before pagination.
+    """
+    from django.core.paginator import Paginator
+
+    members_qs = MembersMaster.objects.all().order_by("customer_code")
+    if search:
+        members_qs = members_qs.filter(
+            Q(customer_code__icontains=search) | Q(membership_no__icontains=search)
+        )
+
+    paginator = Paginator(members_qs, page_size)
+    page_obj = paginator.get_page(page)
+
+    results = []
+    for member in page_obj.object_list:
+        user = KycUser.objects.filter(sap_code=member.customer_code).first()
+        if not user:
+            continue
+        results.append(build_entity_view(user, member))
+
+    return {
+        "results": results,
+        "count": paginator.count,
+        "next": page_obj.has_next(),
+        "previous": page_obj.has_previous(),
+        "total_pages": paginator.num_pages,
+    }
     from apps.ballots.models import AuthRepChange
 
     # Direct KYC DB match

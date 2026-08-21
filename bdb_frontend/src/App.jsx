@@ -19,6 +19,7 @@ import PoolAllotment from "./pages/PoolAllotment";
 import VoteCounting from "./pages/VoteCounting";
 import LiveResults from "./pages/LiveResults";
 import CountingDetailedReport from "./pages/CountingDetailedReport";
+import AuthRepManagement from "./pages/AuthRepManagement";
 
 
 import ManageEligibility from "./pages/ManageEligibility";
@@ -56,7 +57,7 @@ export default function App() {
             <Route path="/results" element={protect(<LiveResults />, undefined)} />
             <Route path="/superadmin-actions" element={protect(<SuperAdminActionsReport />, ["admin"])} />
             <Route path="/candidate-master" element={protect(<CandidateMaster />, ["admin"])} />
-
+<Route path="/auth-rep-management" element={protect(<AuthRepManagement />, ["admin"])} />
             <Route path="/" element={<HomeRedirect />} />
             <Route path="*" element={<HomeRedirect />} />
           </Routes>
