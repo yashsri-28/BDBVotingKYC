@@ -2203,7 +2203,7 @@ export default function CounterSearch() {
               {/* Cards */}
               {step === "select" && (
                 <div className="p-3">
-                  <div className={layoutMode === "vertical" ? "space-y-3" : "grid grid-cols-1 gap-3 sm:grid-cols-2"}>
+                  <div className={layoutMode === "vertical" ? "space-y-3" : "grid grid-cols-1 gap-3 xl:grid-cols-2"}>
                     {result.customer_codes.map((code) => (
                       <BallotCodeCard
                         key={code.customer_code}
@@ -2309,7 +2309,7 @@ export default function CounterSearch() {
           </div>
 
           {/* RIGHT — summary */}
-          <div className="w-52 shrink-0 space-y-3">
+          <div className="w-52 shrink-0 space-y-3 !sticky !top-0">
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">Allotment summary</p>
               <div className="space-y-2">
@@ -2325,15 +2325,17 @@ export default function CounterSearch() {
                   <span className="text-xs font-bold text-blue-700">Total</span>
                   <span className="text-lg font-black text-blue-900">{selected.size}</span>
                 </div>
+              </div>
+            </div>
                 <div className="flex items-center gap-2">
                    <button onClick={clearSelection}
-                      className="rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-300">
+                      className="rounded-md bg-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-300">
                       Clear
                     </button>
                     <button
                       onClick={() => setStep("confirm")}
                       disabled={selected.size === 0 || isArchiveYear}
-                      className={`whitespace-nowrap rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${
+                      className={`whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-semibold transition-all ${
                         selected.size > 0 && !isArchiveYear
                           ? "bg-blue-600 text-white hover:bg-blue-700"
                           : "cursor-not-allowed bg-slate-300 text-slate-500"}`}>
@@ -2341,8 +2343,6 @@ export default function CounterSearch() {
                       {/* ({selected.size} selected) */}
                     </button>
               </div>
-              </div>
-            </div>
 
             {/* On the spot payment */}
             {/* {selectedCodesList.some((c) => c.eligibility_source === "admin_override") && (
@@ -2512,12 +2512,12 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
 
       {/* On the spot payment */}
       {code.eligibility_source === "admin_override" && (
-        <div className="mx-3 mb-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 flex gap-2 items-center">
-          <p className="text-[11px] font-bold text-amber-800">
+        <div className="mx-3 mb-2 rounded-lg border border-amber-300 px-2 py-1.5 flex gap-2 items-center">
+          <p className="text-[11px] font-semibold text-amber-800 bg-amber-100 rounded-md py-1 px-1.5">
             On the spot payment: {code.voting_eligibility === "eligible" ? "Yes" : "No"}
           </p>
-          {code.eligibility_remark && <p className="text-[11px] text-amber-700">Remark: {code.eligibility_remark}</p>}
-          {code.eligibility_updated_by && <p className="text-[11px] text-amber-600">By: {code.eligibility_updated_by}</p>}
+          {code.eligibility_remark && <p className="text-[11px] text-amber-700 bg-amber-100 rounded-md py-1 px-1.5">Remark: {code.eligibility_remark}</p>}
+          {code.eligibility_updated_by && <p className="text-[11px] text-amber-600 bg-amber-100 rounded-md py-1 px-1.5">By: {code.eligibility_updated_by}</p>}
         </div>
       )}
 
