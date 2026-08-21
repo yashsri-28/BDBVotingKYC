@@ -19,3 +19,6 @@ class EntityViewSerializer(serializers.Serializer):
     representative_name = serializers.CharField(allow_null=True)
     access_card_number = serializers.CharField(allow_null=True)
     photograph_path = serializers.CharField(allow_null=True)
+    is_rep_changed = serializers.BooleanField(required=False)
+    rep_changed_at = serializers.DateTimeField(required=False, allow_null=True)
+    rep_changed_by = serializers.CharField(required=False, allow_null=True)
