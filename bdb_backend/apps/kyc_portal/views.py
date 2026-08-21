@@ -6,7 +6,7 @@ from drf_yasg import openapi
 
 from .serializers import EntityViewSerializer
 # from .services import manual_search
-from .services import manual_search, resolve_credential
+from .services import manual_search, resolve_credential ,get_all_members
 from apps.audit.models import AuditLog
 
 
@@ -59,3 +59,31 @@ class ResolveCredentialView(APIView):
             return Response({"detail": "No member found for this credential."}, status=status.HTTP_404_NOT_FOUND)
 
         return Response({"access_card_number": access_code})
+
+
+class AllMembersView(APIView):
+    """
+    GET /api/kyc/all-members/?page=&search= — paginated listing of every
+    member with full entity view data, for the Auth Rep Management screen.
+    """
+
+    @swagger_auto_schema(
+        tags=["KYC Portal"],
+        manual_parameters=[
+            openapi.Parameter("page", openapi.IN_QUERY, type=openapi.TYPE_INTEGER, default=1),
+            openapi.Parameter("search", openapi.IN_QUERY, type=openapi.TYPE_STRING, required=False),
+        ],
+        responses={200: EntityViewSerializer(many=True)},
+    )
+    def get(self, request):
+        page = int(request.query_params.get("page", 1))
+        search = request.query_params.get("search", "").strip() or None
+
+        data = get_all_members(search=search, page=page)
+        return Response({
+            "results": EntityViewSerializer(data["results"], many=True).data,
+            "count": data["count"],
+            "next": data["next"],
+            "previous": data["previous"],
+            "total_pages": data["total_pages"],
+        })

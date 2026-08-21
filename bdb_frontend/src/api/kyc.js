@@ -15,3 +15,10 @@ export async function resolveCredential(credentialNo) {
     return null; // 404 = not found, treat as no match
   }
 }
+
+export async function fetchAllMembers({ page = 1, search = "" } = {}) {
+  const params = { page };
+  if (search.trim()) params.search = search.trim();
+  const { data } = await api.get("/kyc/all-members/", { params });
+  return data;
+}
