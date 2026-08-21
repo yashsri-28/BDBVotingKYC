@@ -665,6 +665,7 @@ def allot_customer_codes(access_card_number, customer_codes, actor, credential_n
             access_card_number=access_card_number,
             customer_code=code,
             entity_name=entry["entity_name"],
+            membership_number=entry.get("membership_number", ""),
             roll_type=entry["roll_type"],
             ballots_allotted=entry["ballot_entitlement"],
             allotted_by=actor,

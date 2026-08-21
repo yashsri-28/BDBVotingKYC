@@ -83,6 +83,9 @@ class AllotmentCustomerCodeSerializer(serializers.Serializer):
     ineligibility_reason = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     eligibility_updated_by = serializers.CharField(required=False, allow_null=True)
     voting_done = serializers.BooleanField(required=False)
+    is_rep_changed = serializers.BooleanField(required=False)
+    rep_changed_at = serializers.DateTimeField(required=False, allow_null=True)
+    rep_changed_by = serializers.CharField(required=False, allow_null=True)
 
 class AllotmentSearchResultSerializer(serializers.Serializer):
     access_card_number = serializers.CharField()
@@ -105,7 +108,7 @@ class CustomerCodeAllotmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerCodeAllotment
         fields = [
-            "id", "access_card_number", "customer_code", "entity_name",
+            "id", "access_card_number", "customer_code", "entity_name", "membership_number",
             "roll_type", "ballots_allotted", "allotted_by_username", "allotted_at",
             "membership_status_at_allotment", "fee_status_at_allotment",
             "voting_eligibility_source", "eligibility_remark_at_allotment",
