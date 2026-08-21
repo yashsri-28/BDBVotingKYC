@@ -146,6 +146,7 @@ class CustomerCodeAllotment(models.Model):
     access_card_number = models.CharField(max_length=50)
     customer_code = models.CharField(max_length=50)  # soft ref -> members_master.customer_code
     entity_name = models.CharField(max_length=255, blank=True)
+    membership_number = models.CharField(max_length=50, blank=True)
     roll_type = models.CharField(max_length=10, choices=RollType.choices)
     ballots_allotted = models.PositiveIntegerField(default=1)
     allotted_by = models.ForeignKey(

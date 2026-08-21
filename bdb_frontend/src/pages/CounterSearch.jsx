@@ -2230,6 +2230,11 @@ export default function CounterSearch() {
                         <li key={c.customer_code} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
                           <div className="min-w-0 flex-1">
                             <span className="font-mono text-xs font-bold text-slate-800">{c.customer_code}</span>
+                            {c.membership_number && (
+                              <span className="ml-1.5 rounded bg-blue-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-blue-700 border border-blue-200">
+                                {c.membership_number}
+                              </span>
+                            )}
                             <span className="mx-1.5 text-slate-400">—</span>
                             <span className="text-xs text-slate-600">{c.entity_name}</span>
                           </div>
@@ -2435,7 +2440,7 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
           <p className="mt-0.5 text-[11px] text-slate-500">
             Auth rep: <span className="font-semibold text-slate-700">{code.representative_name || "—"}</span>
             {code.is_rep_changed && (
-              <span className="ml-1 inline-flex items-center rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-800">⚠ Rep changed</span>
+              <span className="ml-1 inline-flex items-center rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-800">⚠ Authorised Rep. changed</span>
             )}
           </p>
           <p className="text-[11px] text-slate-500">

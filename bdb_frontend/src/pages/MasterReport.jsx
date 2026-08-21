@@ -659,6 +659,7 @@ export default function MasterReport() {
                 <th className="p-3">Access Card</th>
                 <th className="p-3">Customer Code</th>
                 <th className="p-3">Entity Name</th>
+                <th className="p-3">Membership No.</th>
                 <th className="p-3">Category Ballots</th>
                 <th className="p-3">Exclusive Ballots</th>
                 <th className="p-3">Membership Status</th>
@@ -670,12 +671,13 @@ export default function MasterReport() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {loading && <tr><td colSpan={11} className="p-6 text-center text-slate-400">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={11} className="p-6 text-center text-slate-400">No allotments recorded yet.</td></tr>}
+                            {loading && <tr><td colSpan={12} className="p-6 text-center text-slate-400">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={12} className="p-6 text-center text-slate-400">No allotments recorded yet.</td></tr>}
               {!loading && rows.map((row) => (
                 <tr key={row.id} className="transition-colors hover:bg-slate-50">
                   <td className="p-3 font-mono font-bold text-slate-900">{row.access_card_number}</td>
                   <td className="p-3 font-mono text-slate-800">{row.customer_code}</td>
+                  <td className="p-3 font-mono text-slate-600">{row.membership_number || "—"}</td>
                   <td className="p-3 font-semibold text-slate-800">{row.entity_name}</td>
                   <td className="p-3 font-mono font-bold text-purple-800">
                     {row.roll_type === "category" ? row.ballots_allotted : "—"}

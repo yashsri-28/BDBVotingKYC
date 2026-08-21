@@ -5,7 +5,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Sum
 
 from apps.accounts.permissions import IsAdminOrCounting, IsSupervisorOrAdmin, IsSuperAdmin
 from apps.audit.models import AuditLog
@@ -141,11 +141,23 @@ class AssignAllocationView(APIView):
         if counter is None:
             return Response({"detail": "That Counter login could not be found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Pool total is no longer manually managed -- auto-grow it to
-        # cover whatever is being assigned, so the base-pool concept
-        # stays invisible to the Super Admin.
-        if pool.total_ballots < data["assigned_count"]:
-            pool.total_ballots = data["assigned_count"]
+        # # Pool total is no longer manually managed -- auto-grow it to
+        # # cover whatever is being assigned, so the base-pool concept
+        # # stays invisible to the Super Admin.
+        # if pool.total_ballots < data["assigned_count"]:
+        #     pool.total_ballots = data["assigned_count"]
+        #     pool.save(update_fields=["total_ballots"])
+                # Pool total is no longer manually managed -- auto-grow it to
+        # cover ALL counters' allocations combined (existing + this new
+        # one), not just this single assignment's amount.
+        existing_total_allocated = (
+            CounterBallotAllocation.objects.filter(pool=pool)
+            .exclude(counter=counter)
+            .aggregate(total=Sum("assigned_count"))["total"] or 0
+        )
+        required_total = existing_total_allocated + data["assigned_count"]
+        if pool.total_ballots < required_total:
+            pool.total_ballots = required_total
             pool.save(update_fields=["total_ballots"])
 
         try:
@@ -421,13 +433,20 @@ class AdjustAllocationView(APIView):
             return Response({"detail": "That Counter login could not be found."}, status=status.HTTP_404_NOT_FOUND)
 
         # Auto-grow the pool if this increase would exceed its current
-        # total -- pool totals are no longer manually managed.
+        # total -- accounts for ALL counters' allocations combined,
+        # not just this one counter's projected amount.
         if data["delta"] > 0:
+            other_counters_total = (
+                CounterBallotAllocation.objects.filter(pool=pool)
+                .exclude(counter=counter)
+                .aggregate(total=Sum("assigned_count"))["total"] or 0
+            )
             existing = CounterBallotAllocation.objects.filter(pool=pool, counter=counter).first()
             current_assigned = existing.assigned_count if existing else 0
-            projected = current_assigned + data["delta"]
-            if pool.total_ballots < projected:
-                pool.total_ballots = projected
+            projected_this_counter = current_assigned + data["delta"]
+            required_total = other_counters_total + projected_this_counter
+            if pool.total_ballots < required_total:
+                pool.total_ballots = required_total
                 pool.save(update_fields=["total_ballots"])
 
         try:

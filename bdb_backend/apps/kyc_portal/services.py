@@ -356,12 +356,53 @@ def find_users_by_credential(credential_no):
     """
     Returns ALL KycUser rows linked to this credential_no.
     Combines:
-    1. Direct KYC DB match (credential_no column)
+    1. Direct KYC DB match (credential_no column) — EXCLUDING customer
+       codes that have been moved to a DIFFERENT credential_no via
+       AuthRepChange (they now belong to their new card only).
     2. AuthRepChange.new_credential_no match — members whose rep was
-       changed and assigned this credential_no by Super Admin
-    Both are always checked and merged, so no member is missed.
+       changed and assigned this credential_no by Super Admin.
     """
-    return list(KycUser.objects.filter(credential_no=credential_no))
+    from apps.ballots.models import AuthRepChange
+
+    # Direct KYC DB match
+    direct = list(KycUser.objects.filter(credential_no=credential_no))
+
+    # Filter out any customer_codes that have been explicitly moved to
+    # a DIFFERENT credential_no via AuthRepChange.
+    moved_away = set()
+    for kyc_user in direct:
+        if not kyc_user.sap_code:
+            continue
+        latest_change = (
+            AuthRepChange.objects.filter(customer_code=kyc_user.sap_code)
+            .order_by("-changed_at")
+            .first()
+        )
+        if (
+            latest_change
+            and latest_change.new_credential_no
+            and latest_change.new_credential_no != credential_no
+        ):
+            moved_away.add(kyc_user.sap_code)
+
+    result = [u for u in direct if u.sap_code not in moved_away]
+    seen = {u.sap_code for u in result}
+
+    # ALWAYS also check AuthRepChange — even if direct match found,
+    # there may be additional members assigned to this credential_no
+    # by Super Admin via auth rep change.
+    overrides = (
+        AuthRepChange.objects
+        .filter(new_credential_no=credential_no)
+        .order_by("-changed_at")
+    )
+    for override in overrides:
+        if override.customer_code not in seen:
+            users = list(KycUser.objects.filter(sap_code=override.customer_code))
+            result.extend(users)
+            seen.add(override.customer_code)
+
+    return result
 
 
 def get_all_members(search=None, page=1, page_size=25):
