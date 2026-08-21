@@ -677,8 +677,8 @@ export default function MasterReport() {
                 <tr key={row.id} className="transition-colors hover:bg-slate-50">
                   <td className="p-3 font-mono font-bold text-slate-900">{row.access_card_number}</td>
                   <td className="p-3 font-mono text-slate-800">{row.customer_code}</td>
-                  <td className="p-3 font-mono text-slate-600">{row.membership_number || "—"}</td>
                   <td className="p-3 font-semibold text-slate-800">{row.entity_name}</td>
+                  <td className="p-3 font-mono text-slate-600">{row.membership_number || "—"}</td>
                   <td className="p-3 font-mono font-bold text-purple-800">
                     {row.roll_type === "category" ? row.ballots_allotted : "—"}
                   </td>
