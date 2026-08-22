@@ -2054,7 +2054,7 @@ export default function CounterSearch() {
   const exclusiveCount = selectedCodesList.filter((c) => c.roll_type === "exclusive").length;
 
   return (
-    <div className="mx-auto space-y-3 px-4 py-4 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-3">
 
       {/* Device ID setup */}
       {!deviceId && (

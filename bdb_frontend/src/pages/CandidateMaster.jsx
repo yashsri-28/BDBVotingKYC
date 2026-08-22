@@ -153,7 +153,7 @@ export default function CandidateMaster() {
   if (loading) return <div className="mx-auto max-w-5xl px-4 py-8 text-slate-400">Loading…</div>;
 
   return (
-    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-lg font-bold text-slate-900">Election Categories</h2>
         <p className="mb-4 text-xs text-slate-500">Create the categories to be counted, before setting up their candidates.</p>

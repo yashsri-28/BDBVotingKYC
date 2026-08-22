@@ -43,7 +43,7 @@ export default function ManageEligibility() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-bold text-slate-800">Manage Voting Eligibility</h2>
         <form onSubmit={handleSearch} className="flex items-center gap-3">

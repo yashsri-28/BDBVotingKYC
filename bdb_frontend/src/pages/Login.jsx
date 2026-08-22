@@ -235,12 +235,13 @@ export default function Login() {
       showToast("success", "Signed in", `Welcome back. Active year: ${year}.`);
       navigate("/");
     } else {
-      setError(result.message);
+      setError(result.message); 
     }
-  }
+  } 
 
   return (
-    // 1. PURE SPLIT-SCREEN SHELL: Locked height, no navbar/footer spacing
+    <>
+    {/* // 1. PURE SPLIT-SCREEN SHELL: Locked height, no navbar/footer spacing */}
     <div className="flex h-screen w-full overflow-hidden">
       
       {/* 2. LEFT PANEL: Full height image with the gradient gap hack */}
@@ -349,9 +350,15 @@ export default function Login() {
           {/* <div className="border-t border-slate-100 pt-2 text-center font-mono text-[10px] text-slate-400">
             BDB Voting
           </div> */}
+           <div className="border-t border-[#E5EAF2] px-4 py-2">
+        <p className="text-center text-[11px] text-[#94A3B8]">
+          Powered by 9A Business | © 2026 All Rights Reserved Bharat Diamond Bourse
+        </p>
+      </div>
         </div>
 
       </div>
     </div>
+      </>
   );
 }

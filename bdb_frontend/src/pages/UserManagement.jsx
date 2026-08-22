@@ -236,7 +236,7 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6">
       <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>

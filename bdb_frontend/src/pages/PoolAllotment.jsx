@@ -1613,6 +1613,13 @@ export default function PoolAllotment() {
   const [saving, setSaving] = useState(false);
   const [adjusting, setAdjusting] = useState(false);
 
+const [confirmModal, setConfirmModal] = useState({
+  isOpen: false,
+  title: "",
+  message: "",
+  onConfirm: null
+});
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -1686,6 +1693,35 @@ export default function PoolAllotment() {
     }
   }
 
+
+  // Trigger for Assign Button
+  function triggerAssignConfirmation(e) {
+    e.preventDefault();
+    if (!assignForm.counter) { showToast("warning", "Select a counter", "Please choose which Counter to assign ballots to."); return; }
+    
+    setConfirmModal({
+      isOpen: true,
+      title: "Confirm Assignment",
+      message: "Are you sure you want to assign these ballots to the selected Counter?",
+      onConfirm: () => handleAssign({ preventDefault: () => {} }) // Calls your original function safely
+    });
+  }
+
+  // Trigger for Add/Subtract Buttons
+  function triggerAdjustConfirmation(rollType, sign) {
+    if (!allocationAdjustForm.counter) { showToast("warning", "Select a counter", "Please choose which Counter's allocation to adjust."); return; }
+    const raw = allocationAdjustForm[rollType];
+    if (raw === "" || Number(raw) === 0) { showToast("warning", "Enter an amount", "Please enter how many ballots to add or subtract."); return; }
+    
+    setConfirmModal({
+      isOpen: true,
+      title: sign > 0 ? "Confirm Addition" : "Confirm Subtraction",
+      message: `Are you sure you want to ${sign > 0 ? "add" : "subtract"} ${Math.abs(Number(raw))} ${rollType} ballot(s)?`,
+      onConfirm: () => handleAdjustAllocation(rollType, sign) // Calls your original function
+    });
+  }
+
+
   const filteredAllocations = useMemo(() => {
     return allocations.filter((item) => {
       const matchesSearch = item.counter_name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -1719,7 +1755,8 @@ export default function PoolAllotment() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100/70 text-slate-900 font-sans p-3 sm:p-5 md:p-6 space-y-4">
+    // <div className="min-h-screen text-slate-900 font-sans p-3 sm:p-5 md:p-6 space-y-4">
+    <div className="min-h-screen text-slate-900 font-sans space-y-4">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl bg-white p-4 border border-slate-200 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="rounded-lg bg-slate-900 p-2.5 text-white shadow-sm">
@@ -1835,7 +1872,7 @@ export default function PoolAllotment() {
           <h2 className="text-sm font-bold text-slate-900">Assign to Counter</h2>
         </div>
         <p className="mb-3 text-[11px] text-slate-500">Allot ballots to a Counter login.</p>
-        <form onSubmit={handleAssign} className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:items-end">
+        <form onSubmit={triggerAssignConfirmation} className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:items-end">
           <div>
             <label className="mb-1 block text-[11px] font-bold text-slate-700">Counter</label>
             <select value={assignForm.counter} onChange={(e) => setAssignForm((f) => ({ ...f, counter: e.target.value }))}
@@ -1881,9 +1918,9 @@ export default function PoolAllotment() {
               <input type="number" min="0" placeholder="Amount" value={allocationAdjustForm.category}
                 onChange={(e) => setAllocationAdjustForm((f) => ({ ...f, category: e.target.value }))}
                 className="w-full rounded-lg border border-slate-300 p-2 font-mono text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white" />
-              <button type="button" disabled={adjusting} onClick={() => handleAdjustAllocation("category", 1)}
+              <button type="button" disabled={adjusting} onClick={() => triggerAdjustConfirmation("category", 1)}
                 className="shrink-0 rounded-lg bg-[#48A04C] px-2.5 py-2 text-xs font-bold text-white hover:bg-[#369033] active:scale-95 disabled:opacity-60 shadow-sm">+</button>
-              <button type="button" disabled={adjusting} onClick={() => handleAdjustAllocation("category", -1)}
+              <button type="button" disabled={adjusting} onClick={() => triggerAdjustConfirmation("category", -1)}
                 className="shrink-0 rounded-lg bg-red-500 px-2.5 py-2 text-xs font-bold text-white hover:bg-orange-700 active:scale-95 disabled:opacity-60 shadow-sm">−</button>
             </div>
           </div>
@@ -1893,9 +1930,9 @@ export default function PoolAllotment() {
               <input type="number" min="0" placeholder="Amount" value={allocationAdjustForm.exclusive}
                 onChange={(e) => setAllocationAdjustForm((f) => ({ ...f, exclusive: e.target.value }))}
                 className="w-full rounded-lg border border-slate-300 p-2 font-mono text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white" />
-              <button type="button" disabled={adjusting} onClick={() => handleAdjustAllocation("exclusive", 1)}
+              <button type="button" disabled={adjusting} onClick={() => triggerAdjustConfirmation("exclusive", 1)}
                 className="shrink-0 rounded-lg bg-[#48A04C] px-2.5 py-2 text-xs font-bold text-white hover:bg-[#369033] active:scale-95 disabled:opacity-60 shadow-sm">+</button>
-              <button type="button" disabled={adjusting} onClick={() => handleAdjustAllocation("exclusive", -1)}
+              <button type="button" disabled={adjusting} onClick={() => triggerAdjustConfirmation("exclusive", -1)}
                 className="shrink-0 rounded-lg bg-red-500 px-2.5 py-2 text-xs font-bold text-white hover:bg-orange-700 active:scale-95 disabled:opacity-60 shadow-sm">−</button>
             </div>
           </div>
@@ -2010,6 +2047,35 @@ export default function PoolAllotment() {
           </div>
         )}
       </div>
+      {/* Custom Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
+            <div className="p-5">
+              <h3 className="text-lg font-bold text-slate-900">{confirmModal.title}</h3>
+              <p className="mt-2 text-sm text-slate-600">{confirmModal.message}</p>
+            </div>
+            
+            <div className="bg-slate-50 px-5 py-3 flex justify-end gap-2 border-t border-slate-100">
+              <button
+                onClick={() => setConfirmModal({ isOpen: false, title: "", message: "", onConfirm: null })}
+                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 active:scale-95 transition-all shadow-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmModal.onConfirm) confirmModal.onConfirm();
+                  setConfirmModal({ isOpen: false, title: "", message: "", onConfirm: null });
+                }}
+                className="px-4 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

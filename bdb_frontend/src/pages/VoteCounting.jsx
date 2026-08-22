@@ -971,7 +971,7 @@ export default function VoteCounting() {
   );
 
   return (
-    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6">
       {/* Header */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-bold text-slate-900">Vote Counting</h1>

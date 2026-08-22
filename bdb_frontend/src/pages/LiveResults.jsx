@@ -294,7 +294,7 @@ function handleExport() {
     showToast("success", "Export generated", "Live results exported to PDF successfully.");
   }
   return (
-    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6">
       {/* Header */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">

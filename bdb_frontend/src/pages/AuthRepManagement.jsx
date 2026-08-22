@@ -42,7 +42,7 @@ export default function AuthRepManagement() {
   useEffect(() => { setPage(1); }, [search]);
 
   return (
-    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6">
       <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col justify-between gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center">
           <div>
@@ -73,22 +73,22 @@ export default function AuthRepManagement() {
         {error && <p className="text-xs text-rose-600">{error}</p>}
 
         {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
+        <div className="overflow-auto rounded-xl border border-slate-200 max-h-[calc(100vh-300px)]">
           <table className="w-full border-collapse text-left text-xs">
-            <thead>
+            <thead className="sticky top-0">
               <tr className="bg-blue-900 font-semibold text-white">
-                <th className="p-3">Customer Code</th>
-                <th className="p-3">Membership No.</th>
-                <th className="p-3">Entity Name</th>
-                <th className="p-3">Category</th>
-                <th className="p-3">Current Auth Rep</th>
-                <th className="p-3">Access Card</th>
-                <th className="p-3">Payment</th>
-                <th className="p-3">KYC</th>
-                <th className="p-3">Membership</th>
-                <th className="p-3">Eligibility</th>
-                <th className="p-3">Rep Changed?</th>
-                <th className="p-3 text-center">Action</th>
+                <th className="whitespace-nowrap p-3">Customer Code</th>
+                <th className="whitespace-nowrap p-3">Membership No.</th>
+                <th className="whitespace-nowrap p-3">Entity Name</th>
+                <th className="whitespace-nowrap p-3">Category</th>
+                <th className="whitespace-nowrap p-3">Current Auth Rep</th>
+                <th className="whitespace-nowrap p-3">Access Card</th>
+                <th className="whitespace-nowrap p-3">Payment</th>
+                <th className="whitespace-nowrap p-3">KYC</th>
+                <th className="whitespace-nowrap p-3">Membership</th>
+                <th className="whitespace-nowrap p-3">Eligibility</th>
+                <th className="whitespace-nowrap p-3">Rep Changed?</th>
+                <th className="whitespace-nowrap p-3 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
@@ -114,27 +114,27 @@ export default function AuthRepManagement() {
                     </div>
                   </td>
                   <td className="p-3 font-mono text-slate-700">{row.access_card_number || "—"}</td>
-                  <td className="p-3">
+                  <td className="p-3 whitespace-nowrap">
                     <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.annual_fee_status === "paid" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
                       {row.annual_fee_status === "paid" ? "Paid" : "Unpaid"}
                     </span>
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 whitespace-nowrap">
                     <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.kyc_status === "yes" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
                       {row.kyc_status === "yes" ? "Verified" : "Pending"}
                     </span>
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 whitespace-nowrap">
                     <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.membership_status === "active" ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"}`}>
                       {row.membership_status || "—"}
                     </span>
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 whitespace-nowrap">
                     <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.voting_eligibility === "eligible" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
                       {row.voting_eligibility === "eligible" ? "Eligible" : "Not eligible"}
                     </span>
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 whitespace-nowrap">
                     {row.is_rep_changed ? (
                       <span
                         className="inline-flex items-center gap-1 rounded bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-800"
@@ -146,10 +146,10 @@ export default function AuthRepManagement() {
                       <span className="text-[10px] text-slate-400">No</span>
                     )}
                   </td>
-                  <td className="p-3 text-center">
+                  <td className="p-3 text-center whitespace-nowrap">
                     <button
                       onClick={() => setRepModalEntity(row)}
-                      className="rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-[11px] font-bold text-purple-700 hover:bg-purple-100"
+                      className="rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1.5 text-[11px] font-bold text-purple-700 hover:bg-purple-100"
                     >
                       Change Rep
                     </button>

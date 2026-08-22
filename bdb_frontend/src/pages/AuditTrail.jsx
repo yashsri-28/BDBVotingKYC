@@ -144,7 +144,7 @@ export default function AuditTrail() {
   }
 
   return (
-    <div className="mx-auto space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto space-y-6">
       <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div>
           <h2 className="flex items-center space-x-2 text-base font-bold text-slate-900">
@@ -169,9 +169,9 @@ export default function AuditTrail() {
 
         {error && <p className="text-xs text-rose-600">{error}</p>}
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 max-h-[calc(100vh-310px)]">
           <table className="w-full border-collapse text-left text-xs">
-            <thead>
+            <thead className="sticky top-0">
               <tr className="bg-blue-900 font-semibold text-white">
                 <th className="p-3">Timestamp</th>
                 <th className="p-3">Actor</th>
