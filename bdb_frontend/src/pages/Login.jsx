@@ -255,7 +255,7 @@ export default function Login() {
 
       {/* 3. RIGHT PANEL: Isolated scrolling, flex-centered for the card */}
       <div className="flex h-full w-full flex-col items-center justify-center overflow-y-auto p-4 lg:w-[50%] xl:w-[55%]">
-        
+         
         {/* 4. EXACT EXISTING CARD UI: Kept 100% identical to your screenshot */}
         <div className="w-full max-w-md space-y-6 p-4 sm:p-8">
           

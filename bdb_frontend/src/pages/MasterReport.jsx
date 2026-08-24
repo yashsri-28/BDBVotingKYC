@@ -656,18 +656,18 @@ export default function MasterReport() {
           <table className="w-full border-collapse text-left text-xs">
             <thead>
               <tr className="bg-blue-900 font-semibold text-white">
-                <th className="p-3">Access Card</th>
-                <th className="p-3">Customer Code</th>
-                <th className="p-3">Entity Name</th>
-                <th className="p-3">Membership No.</th>
-                <th className="p-3">Category Ballots</th>
-                <th className="p-3">Exclusive Ballots</th>
-                <th className="p-3">Membership Status</th>
-                <th className="p-3">Payment</th>
-                <th className="p-3">Eligibility Source</th>
-                <th className="p-3">Remark</th>
-                <th className="p-3">Allotted By</th>
-                <th className="p-3">Timestamp</th>
+                <th className="whitespace-nowrap p-3">Access Card</th>
+                <th className="whitespace-nowrap p-3">Customer Code</th>
+                <th className="whitespace-nowrap p-3">Entity Name</th>
+                <th className="whitespace-nowrap p-3">Membership No.</th>
+                <th className="whitespace-nowrap p-3">Category Ballots</th>
+                <th className="whitespace-nowrap p-3">Exclusive Ballots</th>
+                <th className="whitespace-nowrap p-3">Membership Status</th>
+                <th className="whitespace-nowrap p-3">Payment</th>
+                <th className="whitespace-nowrap p-3">Eligibility Source</th>
+                <th className="whitespace-nowrap p-3">Remark</th>
+                <th className="whitespace-nowrap p-3">Allotted By</th>
+                <th className="whitespace-nowrap p-3">Timestamp</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
@@ -675,8 +675,8 @@ export default function MasterReport() {
               {!loading && rows.length === 0 && <tr><td colSpan={12} className="p-6 text-center text-slate-400">No allotments recorded yet.</td></tr>}
               {!loading && rows.map((row) => (
                 <tr key={row.id} className="transition-colors hover:bg-slate-50">
-                  <td className="p-3 font-mono font-bold text-slate-900">{row.access_card_number}</td>
-                  <td className="p-3 font-mono text-slate-800">{row.customer_code}</td>
+                  <td className="p-3 whitespace-nowrap font-mono font-bold text-slate-900">{row.access_card_number}</td>
+                  <td className="p-3 whitespace-nowrap font-mono text-slate-800">{row.customer_code}</td>
                   <td className="p-3 font-semibold text-slate-800">{row.entity_name}</td>
                   <td className="p-3 font-mono text-slate-600">{row.membership_number || "—"}</td>
                   <td className="p-3 font-mono font-bold text-purple-800">
@@ -685,18 +685,18 @@ export default function MasterReport() {
                   <td className="p-3 font-mono font-bold text-amber-800">
                     {row.roll_type === "exclusive" ? row.ballots_allotted : "—"}
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 whitespace-nowrap">
                     <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.membership_status_at_allotment === "active" ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"}`}>
                       {row.membership_status_at_allotment || "—"}
                     </span>
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 whitespace-nowrap">
                     <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.fee_status_at_allotment === "paid" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
                       {row.fee_status_at_allotment || "—"}
                     </span>
                   </td>
                   <td className="p-3">
-                    <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.voting_eligibility_source === "admin_override" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}`}>
+                    <span className={`rounded px-2 py-0.5 text-[10px] whitespace-nowrap font-bold ${row.voting_eligibility_source === "admin_override" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}`}>
                       {row.voting_eligibility_source === "admin_override" ? "On-the-Spot" : "Payment + KYC"}
                     </span>
                   </td>

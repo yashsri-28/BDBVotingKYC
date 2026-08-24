@@ -11,13 +11,13 @@ button:not(:disabled) {
   --color-navy-900: #0f172a;
   --color-navy-950: #020617;
 
-  --font-sans: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  /* --font-sans: "Inter", sans-serif; */
+  /* --font-mono: "JetBrains Mono", monospace; */
 }
 
-html, body {
+/* html, body, #root {
   font-family: var(--font-sans);
-}
+} */
 
 [data-cloak] { display: none !important; }
 
@@ -61,4 +61,71 @@ button:focus,
 button:focus-visible {
   outline: none !important;
   /* box-shadow: none !important; */
+}
+
+
+
+
+
+
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('./assets/fonts/inter/Inter_18pt-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('./assets/fonts/inter/Inter_18pt-Medium.ttf') format('truetype');
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('./assets/fonts/inter/Inter_18pt-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('./assets/fonts/inter/Inter_18pt-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./assets/fonts/plusjakarta/PlusJakartaSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./assets/fonts/plusjakarta/PlusJakartaSans-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./assets/fonts/plusjakarta/PlusJakartaSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+html,
+body,
+#root {
+  font-family: 'Inter', sans-serif !important;
+}
+
+.font-heading,
+h1,
+h2,
+h3,
+h4,
+h5{
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
 }
