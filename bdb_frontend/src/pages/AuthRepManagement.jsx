@@ -91,8 +91,8 @@ export default function AuthRepManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {loading && <tr><td colSpan={12} className="p-6 text-center text-slate-400">Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={12} className="p-6 text-center text-slate-400">No members found.</td></tr>}
+              {loading && <tr><td colSpan={11} className="p-6 text-center text-slate-400">Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={11} className="p-6 text-center text-slate-400">No members found.</td></tr>}
               {!loading && rows.map((row) => (
                 <tr key={row.customer_code} className="transition-colors hover:bg-slate-50">
                   <td className="p-3 font-mono font-bold text-slate-900">{row.customer_code}</td>
