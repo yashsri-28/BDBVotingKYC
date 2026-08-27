@@ -2478,18 +2478,21 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
-            {code.annual_fee_status === "paid" ? "Paid" : "Unpaid"}
+            {/* {code.annual_fee_status === "paid" ? "Fees Paid" : "Fees Unpaid"} */}
+                        {code.annual_fee_status === "paid" ? "Membership Fees Paid" : "Membership Fees Not Paid"}
           </span>
-          <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-bold ${
-            code.kyc_status === "yes" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              {code.kyc_status === "yes"
-                ? <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                : <path strokeLinecap="round" strokeLinejoin="round" d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              }
-            </svg>
-            {code.kyc_status === "yes" ? "KYC verified" : "KYC pending"}
-          </span>
+          {code.outstanding_status && (
+            <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-bold ${
+              code.outstanding_status === "clear" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                {code.outstanding_status === "clear"
+                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  : <path strokeLinecap="round" strokeLinejoin="round" d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                }
+              </svg>
+              {code.outstanding_status === "clear" ? "Outstanding Paid" : "Outstanding Pending"}
+            </span>
+          )}
         </div>
       </div>
 
@@ -2554,7 +2557,7 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
       ) : blocked ? (
         <div className="border-t border-rose-200 bg-rose-50 px-3 py-2 rounded-b-xl">
           <span className="text-[11px] font-semibold text-rose-700">
-            Not eligible — check payment and KYC status above
+            Not eligible — check status above
           </span>
         </div>
       ) : (

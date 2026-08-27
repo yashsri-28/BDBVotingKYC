@@ -113,7 +113,7 @@
 //                 <th className="p-3">Pool</th>
 //                 <th className="p-3">Ballots</th>
 //                 <th className="p-3">Membership</th>
-//                 <th className="p-3">Payment</th>
+//                 <th className="p-3">Fees Status</th>
 //                 <th className="p-3">Eligibility Source</th>
 //                 <th className="p-3">Remark</th>
 //                 <th className="p-3">Allotted By</th>
@@ -375,7 +375,7 @@
 //                 <th className="p-3">Pool</th>
 //                 <th className="p-3">Ballots</th>
 //                 <th className="p-3">Membership Status</th>
-//                 <th className="p-3">Payment</th>
+//                 <th className="p-3">Fees Status</th>
 //                 <th className="p-3">Eligibility Source</th>
 //                 <th className="p-3">Remark</th>
 //                 <th className="p-3">Allotted By</th>
@@ -614,7 +614,7 @@ export default function MasterReport() {
               <span>Master Allotment Transaction Report</span>
             </h2>
             <p className="mt-0.5 text-xs text-slate-500">
-              Every ballot allotment, mapped to KYC and Voting DB attributes. {count > 0 && `(${count} total)`}
+              Every ballot allotment, mapped to Electoral Roll and Voting DB attributes. {count > 0 && `(${count} total)`}
             </p>
           </div>
           {(user?.role === "admin" || user?.role === "counting") && (
@@ -663,7 +663,7 @@ export default function MasterReport() {
                 <th className="p-3">Category Ballots</th>
                 <th className="p-3">Exclusive Ballots</th>
                 <th className="p-3">Membership Status</th>
-                <th className="p-3">Payment</th>
+                <th className="p-3">Fees Status</th>
                 <th className="p-3">Eligibility Source</th>
                 <th className="p-3">Remark</th>
                 <th className="p-3">Allotted By</th>

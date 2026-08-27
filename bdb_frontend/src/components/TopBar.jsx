@@ -3,7 +3,6 @@
 // import { useAuth } from "../context/AuthContext";
 // import { useToast } from "../context/ToastContext";
 
-// const ROLE_LABELS = { admin: "Super Admin", supervisor: "Counter", counting: "Counting Login" };
 // const ROLE_INITIALS = { admin: "SA", supervisor: "CT", counting: "CO" };
 
 // const FY_OPTIONS = [
@@ -149,6 +148,17 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 
 const ROLE_LABELS = { admin: "Super Admin", supervisor: "Counter", counting: "Counting Login" };
+const DESIGNATION_LABELS = { super_admin: "Super Admin", company_secretary: "Company Secretary" };
+
+function getUserRoleLabel(user) {
+  // Admin-role logins: prefer the specific designation (Super Admin /
+  // Company Secretary) if set, since both share the same "admin" role
+  // and permissions -- only the display label differs.
+  if (user?.role === "admin" && user?.designation) {
+    return DESIGNATION_LABELS[user.designation] || ROLE_LABELS.admin;
+  }
+  return ROLE_LABELS[user?.role] || user?.role;
+}
 const ROLE_INITIALS = { admin: "SA", supervisor: "CT", counting: "CO" };
 
 const FY_OPTIONS = [
@@ -271,11 +281,10 @@ export default function TopBar() {
 
             <div className="flex items-center space-x-3">
               <div className="hidden text-right sm:block">
-                {/* <div className="text-xs font-bold text-slate-700">{user?.full_name || user?.username}</div> */}
+                <div className="text-xs font-bold text-slate-700">{user?.full_name || user?.username}</div>
                 <div className="flex items-center justify-end space-x-1 text-[10px] font-semibold text-blue-800">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-900" />
-                  {/* <span>{ROLE_LABELS[user?.role] || user?.role}</span> */}
-                  <div className="text-xs font-bold text-slate-700">{user?.full_name || user?.username}</div>
+                  <span>{getUserRoleLabel(user)}</span>
                 </div>
               </div>
               {/* <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-700 text-sm font-bold text-blue-50">

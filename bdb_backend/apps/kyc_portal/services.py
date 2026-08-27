@@ -141,34 +141,172 @@ def get_member_for_user(kyc_user):
     return MembersMaster.objects.filter(customer_code=kyc_user.sap_code).first()
 
 
+# def build_entity_view(kyc_user, member):
+#     """
+#     Combines KycUser + MembersMaster + derived KYC/payment status into the
+#     single flat structure the rest of the app (validators, serializers)
+#     expects. Not a Django model — just a plain dict, since the "Entity"
+#     concept here is assembled from multiple real tables + Voting DB.
+
+#     Checks apps.ballots.models.AuthRepChange first: if a Super Admin has
+#     changed the Authorized Representative for this customer code, that
+#     override wins over the live (read-only) KYC Portal data.
+
+#     Voting eligibility decision table (confirmed 2026-07-29):
+#       1. SuperAdmin override (VotingEligibility) exists -> that wins,
+#          whatever it says (Eligible or Not Eligible), with its remark.
+#       2. No override -> online payment (online_payments, latest record)
+#          must be "Paid" AND KYC (kyc_submissions, latest) must be
+#          "Approved" for the entity to be Eligible.
+#       3. Anything else -> Not Eligible.
+#     """
+#     from apps.ballots.models import AuthRepChange, VotingEligibility
+#     from .models import OnlinePayment
+#     from apps.ballots.models import VotingStatus
+
+#     kyc_approved = KycSubmission.is_kyc_approved(member.customer_code)
+#     kyc_status = "yes" if kyc_approved else "no"
+
+#     fee_paid = OnlinePayment.is_fee_paid(member.customer_code)
+#     annual_fee_status = "paid" if fee_paid else "unpaid"
+
+#     representative_name = kyc_user.name
+#     access_card_number = kyc_user.access_code
+#     photograph_path = kyc_user.profile_picture
+
+#     override = AuthRepChange.current_override_for(member.customer_code)
+#     if override:
+#         representative_name = override.new_representative_name
+#         access_card_number = override.new_access_card_number or access_card_number
+#         if override.new_photo:
+#             photograph_path = override.new_photo.name
+
+#     eligibility_override = VotingEligibility.objects.filter(customer_code=member.customer_code).first()
+#     voting_status = VotingStatus.objects.filter(customer_code=member.customer_code).first()
+#     voting_done = voting_status.voting_done if voting_status else False
+
+#     # if eligibility_override:
+#     #     # Rule 1: SuperAdmin's manual on-the-spot decision always wins.
+#     #     voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
+#     #     eligibility_source = "admin_override"
+#     #     eligibility_remark = eligibility_override.remarks
+#     # elif fee_paid and kyc_approved:
+#     #     # Rule 2: normal path -- online payment done AND KYC approved.
+#     #     voting_eligibility = "eligible"
+#     #     eligibility_source = "online_payment_kyc"
+#     #     eligibility_remark = ""
+#     # else:
+#     #     # Rule 3: everything else is Not Eligible until SuperAdmin overrides.
+#     #     voting_eligibility = "not_eligible"
+#     #     eligibility_source = "online_payment_kyc"
+#     #     eligibility_remark = ""
+#     # if eligibility_override:
+#     #     voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
+#     #     eligibility_source = "admin_override"
+#     #     eligibility_remark = eligibility_override.remarks
+#     #     eligibility_updated_by = eligibility_override.updated_by.username if eligibility_override.updated_by else None
+#     # elif fee_paid and kyc_approved:
+#     #     voting_eligibility = "eligible"
+#     #     eligibility_source = "online_payment_kyc"
+#     #     eligibility_remark = ""
+#     #     eligibility_updated_by = None
+#     # else:
+#     #     voting_eligibility = "not_eligible"
+#     #     eligibility_source = "online_payment_kyc"
+#     #     eligibility_remark = ""
+#     #     eligibility_updated_by = None
+#     if eligibility_override:
+#         voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
+#         eligibility_source = "admin_override"
+#         eligibility_remark = eligibility_override.remarks
+#         eligibility_updated_by = eligibility_override.updated_by.username if eligibility_override.updated_by else None
+#         ineligibility_reason = eligibility_remark if not eligibility_override.is_eligible else ""
+#     elif fee_paid and kyc_approved:
+#         voting_eligibility = "eligible"
+#         eligibility_source = "online_payment_kyc"
+#         eligibility_remark = ""
+#         eligibility_updated_by = None
+#         ineligibility_reason = ""
+#     else:
+#         voting_eligibility = "not_eligible"
+#         eligibility_source = "online_payment_kyc"
+#         eligibility_remark = ""
+#         eligibility_updated_by = None
+#         # Build a specific, dynamic reason instead of a generic message.
+#         missing = []
+#         if not fee_paid:
+#             missing.append("Annual payment not valid for the current financial year")
+#         if not kyc_approved:
+#             missing.append("KYC not approved")
+#         ineligibility_reason = "; ".join(missing)
+
+#     return {
+#         "customer_code": member.customer_code,
+#         "entity_name": member.member_name,
+#         "membership_number": member.membership_no,
+#         "category": member.member_category,
+#         "member_group": member.group_name,
+#         "membership_status": "active" if member.is_membership_active else "inactive",
+#         "kyc_status": kyc_status,
+#         "annual_fee_status": annual_fee_status,
+#         "voting_eligibility": voting_eligibility,
+#         "eligibility_source": eligibility_source,
+#         "eligibility_remark": eligibility_remark,
+#         "representative_name": representative_name,
+#         "access_card_number": access_card_number,
+#         "photograph_path": photograph_path,
+#         "eligibility_updated_by": eligibility_updated_by,
+#         "ineligibility_reason": ineligibility_reason,
+#         "voting_done": voting_done,
+
+#         "is_rep_changed": override is not None,
+#         "rep_changed_at": override.changed_at if override else None,
+#         "rep_changed_by": override.changed_by.username if override else None,
+#     }
+
 def build_entity_view(kyc_user, member):
     """
-    Combines KycUser + MembersMaster + derived KYC/payment status into the
-    single flat structure the rest of the app (validators, serializers)
-    expects. Not a Django model — just a plain dict, since the "Entity"
-    concept here is assembled from multiple real tables + Voting DB.
+    Combines KycUser + MembersMaster + ElectoralRoll eligibility data
+    into the single flat structure the rest of the app (validators,
+    serializers) expects. Not a Django model — just a plain dict.
 
     Checks apps.ballots.models.AuthRepChange first: if a Super Admin has
     changed the Authorized Representative for this customer code, that
     override wins over the live (read-only) KYC Portal data.
 
-    Voting eligibility decision table (confirmed 2026-07-29):
+    Voting eligibility decision table (updated 2026-08-24 — client-
+    provided eligibility workflow, replaces the old payments/
+    kyc_submissions runtime calculation):
       1. SuperAdmin override (VotingEligibility) exists -> that wins,
          whatever it says (Eligible or Not Eligible), with its remark.
-      2. No override -> online payment (online_payments, latest record)
-         must be "Paid" AND KYC (kyc_submissions, latest) must be
-         "Approved" for the entity to be Eligible.
-      3. Anything else -> Not Eligible.
+         UNCHANGED from before.
+      2. No override -> ElectoralRoll.final_eligibility_status for this
+         customer_code is used directly. This is pre-calculated by the
+         client (fees paid AND outstanding clear, for Category members;
+         fees paid alone, for Exclusive members) and imported via the
+         import_electoral_rolls management command. We do NOT recompute
+         this from KYC DB payment/KYC tables anymore.
+      3. Not on the Electoral Roll at all -> Not Eligible (same as a
+         False final_eligibility_status -- see ElectoralRoll's default).
     """
-    from apps.ballots.models import AuthRepChange, VotingEligibility
-    from .models import OnlinePayment
+    from apps.ballots.models import AuthRepChange, VotingEligibility, ElectoralRoll
     from apps.ballots.models import VotingStatus
 
-    kyc_approved = KycSubmission.is_kyc_approved(member.customer_code)
-    kyc_status = "yes" if kyc_approved else "no"
+    roll_entry = ElectoralRoll.objects.filter(customer_code=member.customer_code).first()
 
-    fee_paid = OnlinePayment.is_fee_paid(member.customer_code)
-    annual_fee_status = "paid" if fee_paid else "unpaid"
+    fees_paid = roll_entry.membership_fees_paid if roll_entry else None
+    annual_fee_status = "paid" if fees_paid else "unpaid"
+
+    outstanding_clear = roll_entry.outstanding_clear if roll_entry else None
+    if outstanding_clear is None:
+        outstanding_status = None  # not applicable (Exclusive roll, or not yet imported)
+    else:
+        outstanding_status = "clear" if outstanding_clear else "not_clear"
+
+    # This is the client's own pre-calculated final answer -- we trust it
+    # directly rather than re-deriving it. Missing roll entry defaults to
+    # False (Not Eligible) via ElectoralRoll's own field default.
+    roll_eligible = roll_entry.final_eligibility_status if roll_entry else False
 
     representative_name = kyc_user.name
     access_card_number = kyc_user.access_code
@@ -185,60 +323,36 @@ def build_entity_view(kyc_user, member):
     voting_status = VotingStatus.objects.filter(customer_code=member.customer_code).first()
     voting_done = voting_status.voting_done if voting_status else False
 
-    # if eligibility_override:
-    #     # Rule 1: SuperAdmin's manual on-the-spot decision always wins.
-    #     voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
-    #     eligibility_source = "admin_override"
-    #     eligibility_remark = eligibility_override.remarks
-    # elif fee_paid and kyc_approved:
-    #     # Rule 2: normal path -- online payment done AND KYC approved.
-    #     voting_eligibility = "eligible"
-    #     eligibility_source = "online_payment_kyc"
-    #     eligibility_remark = ""
-    # else:
-    #     # Rule 3: everything else is Not Eligible until SuperAdmin overrides.
-    #     voting_eligibility = "not_eligible"
-    #     eligibility_source = "online_payment_kyc"
-    #     eligibility_remark = ""
-    # if eligibility_override:
-    #     voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
-    #     eligibility_source = "admin_override"
-    #     eligibility_remark = eligibility_override.remarks
-    #     eligibility_updated_by = eligibility_override.updated_by.username if eligibility_override.updated_by else None
-    # elif fee_paid and kyc_approved:
-    #     voting_eligibility = "eligible"
-    #     eligibility_source = "online_payment_kyc"
-    #     eligibility_remark = ""
-    #     eligibility_updated_by = None
-    # else:
-    #     voting_eligibility = "not_eligible"
-    #     eligibility_source = "online_payment_kyc"
-    #     eligibility_remark = ""
-    #     eligibility_updated_by = None
     if eligibility_override:
+        # Rule 1: SuperAdmin's manual on-the-spot decision always wins,
+        # regardless of what the Electoral Roll says.
         voting_eligibility = "eligible" if eligibility_override.is_eligible else "not_eligible"
         eligibility_source = "admin_override"
         eligibility_remark = eligibility_override.remarks
         eligibility_updated_by = eligibility_override.updated_by.username if eligibility_override.updated_by else None
         ineligibility_reason = eligibility_remark if not eligibility_override.is_eligible else ""
-    elif fee_paid and kyc_approved:
+    elif roll_eligible:
+        # Rule 2: Electoral Roll's pre-calculated eligibility says Yes.
         voting_eligibility = "eligible"
-        eligibility_source = "online_payment_kyc"
+        eligibility_source = "electoral_roll"
         eligibility_remark = ""
         eligibility_updated_by = None
         ineligibility_reason = ""
     else:
+        # Rule 3: Not eligible per the roll (or not on the roll at all).
         voting_eligibility = "not_eligible"
-        eligibility_source = "online_payment_kyc"
+        eligibility_source = "electoral_roll"
         eligibility_remark = ""
         eligibility_updated_by = None
-        # Build a specific, dynamic reason instead of a generic message.
-        missing = []
-        if not fee_paid:
-            missing.append("Annual payment not valid for the current financial year")
-        if not kyc_approved:
-            missing.append("KYC not approved")
-        ineligibility_reason = "; ".join(missing)
+        if roll_entry is None:
+            ineligibility_reason = "Not on the Electoral Roll for this election."
+        else:
+            missing = []
+            if not fees_paid:
+                missing.append("Membership fees not paid")
+            if roll_entry.roll_type == "category" and not outstanding_clear:
+                missing.append("Outstanding not clear")
+            ineligibility_reason = "; ".join(missing) if missing else "Not eligible per the Electoral Roll."
 
     return {
         "customer_code": member.customer_code,
@@ -247,8 +361,8 @@ def build_entity_view(kyc_user, member):
         "category": member.member_category,
         "member_group": member.group_name,
         "membership_status": "active" if member.is_membership_active else "inactive",
-        "kyc_status": kyc_status,
         "annual_fee_status": annual_fee_status,
+        "outstanding_status": outstanding_status,
         "voting_eligibility": voting_eligibility,
         "eligibility_source": eligibility_source,
         "eligibility_remark": eligibility_remark,
@@ -437,25 +551,4 @@ def get_all_members(search=None, page=1, page_size=25):
         "previous": page_obj.has_previous(),
         "total_pages": paginator.num_pages,
     }
-    from apps.ballots.models import AuthRepChange
 
-    # Direct KYC DB match
-    direct = list(KycUser.objects.filter(credential_no=credential_no))
-    seen = {u.sap_code for u in direct}
-    result = list(direct)
-
-    # ALWAYS also check AuthRepChange — even if direct match found,
-    # there may be additional members assigned to this credential_no
-    # by Super Admin via auth rep change.
-    overrides = (
-        AuthRepChange.objects
-        .filter(new_credential_no=credential_no)
-        .order_by("-changed_at")
-    )
-    for override in overrides:
-        if override.customer_code not in seen:
-            users = list(KycUser.objects.filter(sap_code=override.customer_code))
-            result.extend(users)
-            seen.add(override.customer_code)
-
-    return result

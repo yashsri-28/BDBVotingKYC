@@ -131,6 +131,7 @@
 //   const [firstName, setFirstName] = useState("");
 //   const [lastName, setLastName] = useState("");
 //   const [role, setRole] = useState("supervisor");
+  // const [designation, setDesignation] = useState("super_admin");
 //   const [error, setError] = useState("");
 //   const [saving, setSaving] = useState(false);
 
@@ -257,14 +258,15 @@ export default function UserManagement() {
                 <th className="p-3">Username</th>
                 <th className="p-3">Name</th>
                 <th className="p-3">Role</th>
+                <th className="p-3">Designation</th>
                 <th className="p-3">Status</th>
                 <th className="p-3">Joined</th>
                 <th className="p-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {loading && <tr><td colSpan={6} className="p-6 text-center text-slate-400">Loading…</td></tr>}
-              {!loading && logins.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-slate-400">No logins created yet.</td></tr>}
+              {loading && <tr><td colSpan={7} className="p-6 text-center text-slate-400">Loading…</td></tr>}
+              {!loading && logins.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-slate-400">No logins created yet.</td></tr>}
               {!loading && logins.map((u) => (
                 <tr key={u.id} className="hover:bg-slate-50">
                   <td className="p-3 font-mono font-bold text-slate-900">{u.username}</td>
@@ -278,10 +280,8 @@ export default function UserManagement() {
                       {ROLE_LABELS[u.role] || u.role}
                     </span>
                   </td>
-                  <td className="p-3">
-                    <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${u.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-500"}`}>
-                      {u.is_active ? "Active" : "Deactivated"}
-                    </span>
+                  <td className="p-3 text-slate-600">
+                    {u.designation_label || "—"}
                   </td>
                   <td className="p-3 font-mono text-[11px] text-slate-500">{new Date(u.date_joined).toLocaleDateString()}</td>
                   <td className="space-x-2 p-3">
@@ -324,6 +324,7 @@ function CreateLoginModal({ open, onClose, onCreated }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [role, setRole] = useState("supervisor");
+  const [designation, setDesignation] = useState("super_admin");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -333,7 +334,10 @@ function CreateLoginModal({ open, onClose, onCreated }) {
     setSaving(true);
     setError("");
     try {
-      const result = await createLogin({ username: username.trim(), firstName, lastName, role });
+      const result = await createLogin({
+        username: username.trim(), firstName, lastName, role,
+        designation: role === "admin" ? designation : "",
+      });
       onCreated({ username: result.username, password: result.temp_password });
       setUsername(""); setFirstName(""); setLastName("");
     } catch (err) {
@@ -369,6 +373,18 @@ function CreateLoginModal({ open, onClose, onCreated }) {
             <option value="admin">Returning Officer (RO).</option>
           </select>
         </div>
+        {role === "admin" && (
+          <div>
+            <label className="mb-1 block font-bold text-slate-700">Designation</label>
+            <select value={designation} onChange={(e) => setDesignation(e.target.value)} className="w-full rounded-lg border border-slate-300 p-2 font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="super_admin">Super Admin</option>
+              <option value="company_secretary">Company Secretary</option>
+            </select>
+            <p className="mt-1 text-[10px] text-slate-400">
+              Display label only — permissions are identical either way.
+            </p>
+          </div>
+        )}
         <div className="flex justify-end space-x-3 border-t border-slate-200 pt-3">
           <button type="button" onClick={onClose} className="rounded-lg bg-slate-100 px-4 py-2 font-bold text-slate-700 hover:bg-slate-200">Cancel</button>
           <button type="submit" disabled={saving} className="rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700 disabled:opacity-60">

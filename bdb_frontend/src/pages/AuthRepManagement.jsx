@@ -83,9 +83,8 @@ export default function AuthRepManagement() {
                 <th className="p-3">Category</th>
                 <th className="p-3">Current Auth Rep</th>
                 <th className="p-3">Access Card</th>
-                <th className="p-3">Payment</th>
-                <th className="p-3">KYC</th>
-                <th className="p-3">Membership</th>
+                <th className="p-3">Fees Status</th>
+                <th className="p-3">Outstanding</th>
                 <th className="p-3">Eligibility</th>
                 <th className="p-3">Rep Changed?</th>
                 <th className="p-3 text-center">Action</th>
@@ -120,14 +119,13 @@ export default function AuthRepManagement() {
                     </span>
                   </td>
                   <td className="p-3">
-                    <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.kyc_status === "yes" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                      {row.kyc_status === "yes" ? "Verified" : "Pending"}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.membership_status === "active" ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"}`}>
-                      {row.membership_status || "—"}
-                    </span>
+                    {row.outstanding_status ? (
+                      <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.outstanding_status === "clear" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
+                        {row.outstanding_status === "clear" ? "Clear" : "Pending"}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400">N/A</span>
+                    )}
                   </td>
                   <td className="p-3">
                     <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.voting_eligibility === "eligible" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>

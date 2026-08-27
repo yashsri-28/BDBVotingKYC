@@ -31,6 +31,19 @@ class CounterStaff(AbstractUser):
     employee_code = models.CharField(max_length=50, blank=True)
     is_active_shift = models.BooleanField(default=False)
 
+    class Designation(models.TextChoices):
+        SUPER_ADMIN = "super_admin", "Super Admin"
+        COMPANY_SECRETARY = "company_secretary", "Company Secretary"
+
+    # Display-only label for admin-role logins. Does NOT affect
+    # permissions in any way -- role stays "admin" either way, this
+    # field only changes what's shown in the UI (TopBar, User Management
+    # list). Blank for non-admin roles.
+    designation = models.CharField(
+        max_length=30, choices=Designation.choices, blank=True,
+        help_text="Display label only, for admin-role logins. Does not affect permissions.",
+    )
+
     # Single-active-session enforcement (session_limiter)
     active_session_key = models.CharField(max_length=100, blank=True, null=True)
 

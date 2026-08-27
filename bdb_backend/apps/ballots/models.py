@@ -52,6 +52,31 @@ class ElectoralRoll(models.Model):
     ballot_entitlement = models.PositiveIntegerField(default=1)
     imported_at = models.DateTimeField(auto_now_add=True)
 
+    # --- Eligibility flags (added for the client-provided eligibility
+    # workflow, confirmed 2026-08-24): the client now calculates fee/
+    # outstanding status themselves and sends it in the same Electoral
+    # Roll Excel files. These replace the old payments/kyc_submissions
+    # runtime calculation. Super Admin's VotingEligibility override
+    # still takes priority over these when it exists (unchanged).
+    membership_fees_paid = models.BooleanField(
+        null=True, blank=True,
+        help_text="From Excel column 'Membership Fees Paid upto <date>'. "
+                   "Null means not yet imported/unknown for this row.",
+    )
+    outstanding_clear = models.BooleanField(
+        null=True, blank=True,
+        help_text="From Excel column 'Outstanding Clear as on date?'. "
+                   "Category roll only -- always null for Exclusive roll rows.",
+    )
+    final_eligibility_status = models.BooleanField(
+        default=False,
+        help_text="From Excel column 'Final Eligibility Status'. This is "
+                   "the client's own pre-calculated AND of the fields "
+                   "above. Defaults to False (not eligible) so a member "
+                   "is never accidentally treated as eligible before this "
+                   "is explicitly imported as True.",
+    )
+
     class Meta:
         indexes = [
             models.Index(fields=["roll_type"]),
