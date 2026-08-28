@@ -2481,7 +2481,7 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
             {/* {code.annual_fee_status === "paid" ? "Fees Paid" : "Fees Unpaid"} */}
                         {code.annual_fee_status === "paid" ? "Membership Fees Paid" : "Membership Fees Not Paid"}
           </span>
-          {code.outstanding_status && (
+          {/* {code.outstanding_status && (
             <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-bold ${
               code.outstanding_status === "clear" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -2492,7 +2492,7 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
               </svg>
               {code.outstanding_status === "clear" ? "Outstanding Paid" : "Outstanding Pending"}
             </span>
-          )}
+          )} */}
         </div>
       </div>
 
@@ -2547,7 +2547,7 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-              Already allotted
+              Ballot Assgined
             </span>
             {code.allotted_at && (
               <span className="font-mono text-[10px] text-red-400">{new Date(code.allotted_at).toLocaleString()}</span>
