@@ -2427,12 +2427,12 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {code.membership_number && (
-            <span className="rounded bg-blue-50 px-2 py-0.5 font-mono text-[11px] font-bold text-blue-700 border border-blue-200">
+            <span className="rounded bg-blue-50 px-2 py-0.5 font-mono text-[20px] font-bold text-blue-700 border border-blue-200">
               {code.membership_number}
             </span>
           )}
           {!locked && (
-            <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${!blocked ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
+            <span className={`rounded px-2 py-0.5 text-[14px] font-bold ${!blocked ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}>
               {!blocked ? "✓ Eligible" : "✗ Not eligible"}
             </span>
           )}
@@ -2517,7 +2517,7 @@ function BallotCodeCard({ code, selected, onToggle, disabled }) {
       {code.eligibility_source === "admin_override" && (
         <div className="mx-3 mb-2 rounded-lg border border-amber-300 px-2 py-1.5 flex gap-2 items-center">
           <p className="text-[11px] font-semibold text-amber-800 bg-amber-100 rounded-md py-1 px-1.5">
-            On the spot payment: {code.voting_eligibility === "eligible" ? "Yes" : "No"}
+            On the spot Eligibility: {code.voting_eligibility === "eligible" ? "Yes" : "No"}
           </p>
           {code.eligibility_remark && <p className="text-[11px] text-amber-700 bg-amber-100 rounded-md py-1 px-1.5">Remark: {code.eligibility_remark}</p>}
           {code.eligibility_updated_by && <p className="text-[11px] text-amber-600 bg-amber-100 rounded-md py-1 px-1.5">By: {code.eligibility_updated_by}</p>}
