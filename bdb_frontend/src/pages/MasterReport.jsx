@@ -697,7 +697,7 @@ export default function MasterReport() {
                   </td>
                   <td className="p-3">
                     <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${row.voting_eligibility_source === "admin_override" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}`}>
-                      {row.voting_eligibility_source === "admin_override" ? "On-the-Spot" : "Payment + KYC"}
+                      {row.voting_eligibility_source === "admin_override" ? "On-the-Spot" : "Electoral Roll"}
                     </span>
                   </td>
                   <td className="p-3 max-w-[180px] truncate text-slate-600" title={row.eligibility_remark_at_allotment || ""}>
