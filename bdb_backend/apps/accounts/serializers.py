@@ -38,6 +38,7 @@ class CounterStaffLoginSerializer(TokenObtainPairSerializer):
             "username": user.username,
             "full_name": user.get_full_name(),
             "role": user.role,
+            "designation": user.designation,
         }
         mapping = getattr(user, "counter_mapping", None)
         data["counter"] = (
@@ -57,11 +58,13 @@ class CounterStaffSerializer(serializers.ModelSerializer):
 class LoginListSerializer(serializers.ModelSerializer):
     """One row on the Super Admin's User Management screen."""
     role_label = serializers.CharField(source="get_role_display", read_only=True)
+    designation_label = serializers.CharField(source="get_designation_display", read_only=True)
 
     class Meta:
         model = CounterStaff
         fields = [
             "id", "username", "first_name", "last_name", "role", "role_label",
+            "designation", "designation_label",
             "is_active", "date_joined", "last_login",
         ]
 
@@ -100,11 +103,14 @@ class CreateLoginSerializer(serializers.ModelSerializer):
     login. Password is always generated server-side and returned once
     in the response -- there is no self-signup and no email flow
     (confirmed 2026-07-28, admin-creation added 2026-07-30).
-    """
 
+    designation is a display-only label (added 2026-08-27) for admin-
+    role logins -- e.g. "Company Secretary" vs "Super Admin". It never
+    affects permissions; role stays "admin" regardless.
+    """
     class Meta:
         model = CounterStaff
-        fields = ["id", "username", "first_name", "last_name", "role"]
+        fields = ["id", "username", "first_name", "last_name", "role", "designation"]
 
     def create(self, validated_data):
         temp_password = _generate_temp_password()
