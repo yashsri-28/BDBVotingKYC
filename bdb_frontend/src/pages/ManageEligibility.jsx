@@ -51,7 +51,7 @@ export default function ManageEligibility() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by Customer Code / Membership No. / Entity Name"
+            placeholder="Search by Customer Code / Access Code"
             className="flex-1 rounded-xl border border-slate-300 bg-slate-50 py-2.5 px-4 text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
