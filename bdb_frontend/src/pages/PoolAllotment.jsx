@@ -1728,7 +1728,8 @@ const [confirmModal, setConfirmModal] = useState({
     if (warnings.length > 0) {
       setConfirmModal({
         isOpen: true,
-        title: "⚠ This will REPLACE existing ballots, not add to them",
+        isWarning: true,
+        title: "⚠ This will REPLACE existing ballots",
         message: `${displayName}'s current ballots will be REPLACED (not added to):\n${warnings.join("\n")}\n\nUse "Add / Subtract" instead if you wanted to add. Continue?`,
         onConfirm: () => handleAssign({ preventDefault: () => {} }),
       });
@@ -2085,15 +2086,21 @@ const [confirmModal, setConfirmModal] = useState({
       {/* Custom Confirmation Modal */}
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div className="p-5">
-              <h3 className="text-lg font-bold text-slate-900">{confirmModal.title}</h3>
-              <p className="mt-2 text-sm text-slate-600">{confirmModal.message}</p>
+          <div className={`bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden border-2 ${
+            confirmModal.isWarning ? "border-red-600" : "border-transparent"
+          }`}>
+            <div className={`p-5 ${confirmModal.isWarning ? "bg-red-50" : ""}`}>
+              <h3 className={`text-lg font-bold ${confirmModal.isWarning ? "text-red-800" : "text-slate-900"}`}>
+                {confirmModal.title}
+              </h3>
+              <p className={`mt-2 text-sm whitespace-pre-line ${confirmModal.isWarning ? "text-red-700 font-medium" : "text-slate-600"}`}>
+                {confirmModal.message}
+              </p>
             </div>
-            
+
             <div className="bg-slate-50 px-5 py-3 flex justify-end gap-2 border-t border-slate-100">
               <button
-                onClick={() => setConfirmModal({ isOpen: false, title: "", message: "", onConfirm: null })}
+                onClick={() => setConfirmModal({ isOpen: false, title: "", message: "", onConfirm: null, isWarning: false })}
                 className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 active:scale-95 transition-all shadow-sm"
               >
                 Cancel
@@ -2101,11 +2108,13 @@ const [confirmModal, setConfirmModal] = useState({
               <button
                 onClick={() => {
                   if (confirmModal.onConfirm) confirmModal.onConfirm();
-                  setConfirmModal({ isOpen: false, title: "", message: "", onConfirm: null });
+                  setConfirmModal({ isOpen: false, title: "", message: "", onConfirm: null, isWarning: false });
                 }}
-                className="px-4 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+                className={`px-4 py-2 text-xs font-bold text-white rounded-lg active:scale-95 transition-all shadow-sm ${
+                  confirmModal.isWarning ? "bg-red-700 hover:bg-red-800" : "bg-blue-600 hover:bg-blue-700"
+                }`}
               >
-                OK
+                {confirmModal.isWarning ? "Yes, Replace" : "OK"}
               </button>
             </div>
           </div>
