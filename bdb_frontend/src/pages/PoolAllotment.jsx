@@ -1698,13 +1698,48 @@ const [confirmModal, setConfirmModal] = useState({
   function triggerAssignConfirmation(e) {
     e.preventDefault();
     if (!assignForm.counter) { showToast("warning", "Select a counter", "Please choose which Counter to assign ballots to."); return; }
-    
-    setConfirmModal({
-      isOpen: true,
-      title: "Confirm Assignment",
-      message: "Are you sure you want to assign these ballots to the selected Counter?",
-      onConfirm: () => handleAssign({ preventDefault: () => {} }) // Calls your original function safely
-    });
+
+    // Find this counter's EXISTING allocations, so we can warn if this
+    // "Assign" action will REPLACE (not add to) what they already have.
+    const existingCategory = allocations.find(
+      (a) => String(a.counter) === String(assignForm.counter) && a.roll_type === "category"
+    );
+    const existingExclusive = allocations.find(
+      (a) => String(a.counter) === String(assignForm.counter) && a.roll_type === "exclusive"
+    );
+
+    const warnings = [];
+    if (assignForm.category !== "" && existingCategory && existingCategory.assigned_count > 0) {
+      warnings.push(
+        `Category: currently ${existingCategory.assigned_count}, will be REPLACED with ${assignForm.category}`
+      );
+    }
+    if (assignForm.exclusive !== "" && existingExclusive && existingExclusive.assigned_count > 0) {
+      warnings.push(
+        `Exclusive: currently ${existingExclusive.assigned_count}, will be REPLACED with ${assignForm.exclusive}`
+      );
+    }
+
+    const counterName = counters.find((c) => String(c.id) === String(assignForm.counter));
+    const displayName = counterName
+      ? [counterName.first_name, counterName.last_name].filter(Boolean).join(" ") || counterName.username
+      : "this Counter";
+
+    if (warnings.length > 0) {
+      setConfirmModal({
+        isOpen: true,
+        title: "⚠ This will REPLACE existing ballots, not add to them",
+        message: `${displayName}'s current ballots will be REPLACED (not added to):\n${warnings.join("\n")}\n\nUse "Add / Subtract" instead if you wanted to add. Continue?`,
+        onConfirm: () => handleAssign({ preventDefault: () => {} }),
+      });
+    } else {
+      setConfirmModal({
+        isOpen: true,
+        title: "Confirm Assignment",
+        message: `Assign these ballots to ${displayName}?`,
+        onConfirm: () => handleAssign({ preventDefault: () => {} }),
+      });
+    }
   }
 
   // Trigger for Add/Subtract Buttons
